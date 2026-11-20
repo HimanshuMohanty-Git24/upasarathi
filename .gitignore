@@ -1,0 +1,23 @@
+# dependencies & builds
+/node_modules
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# source-download cache (re-creatable with `npm run data:sources`)
+/.cache/
+
+# secrets: NEVER commit API keys
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+!.env.example
+
+# misc
+.DS_Store
+Thumbs.db
+*.pem
+.vercel

@@ -1,0 +1,253 @@
+{
+  "categories": {
+    "discernment": "Discernment & choice",
+    "truth": "Truth & falsehood",
+    "knowledge": "Knowledge & its limits",
+    "self": "The self",
+    "practice": "Practice & conduct",
+    "bondage": "What binds"
+  },
+  "concepts": [
+    {
+      "id": "shreyas", "sa": "श्रेयस्", "iast": "śreyas", "en": "the lasting good", "category": "discernment",
+      "desc": "What actually serves a person over time, even when it is not what they want now. The Kaṭha names it as one of two things that 'approach' every human being.",
+      "teaches": [
+        { "verse": "KaU_1.2.1", "why": "Names the good and the pleasant as two different ends that bind a person differently." },
+        { "verse": "KaU_1.2.2", "why": "The steady one examines both and chooses the good over the pleasant." },
+        { "verse": "KaU_1.2.3", "why": "Yama praises Naciketas for refusing every pleasant offer." }
+      ],
+      "contrasts": [{ "with": "preyas", "verse": "KaU_1.2.1", "why": "Kaṭha sets the two side by side: one leads to the good, the other falls short of the goal." }]
+    },
+    {
+      "id": "preyas", "sa": "प्रेयस्", "iast": "preyas", "en": "the pleasant", "category": "bondage",
+      "desc": "What gratifies now: wealth, praise, comfort, agreement. Not evil in itself, but binding when it is chosen for its own sake.",
+      "teaches": [
+        { "verse": "KaU_1.2.1", "why": "The pleasant is the second of the two roads." },
+        { "verse": "KaU_1.2.2", "why": "The dull choose the pleasant for the sake of getting and keeping." },
+        { "verse": "KaU_1.1.23", "why": "Yama offers long life, sons and wealth to turn Naciketas from his question." },
+        { "verse": "KaU_1.1.26", "why": "Naciketas: these pleasures last till tomorrow and wear out the vigour of the senses." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "viveka", "sa": "विवेक", "iast": "viveka", "en": "discernment", "category": "discernment",
+      "desc": "Separating the good from the merely pleasant, the real from the apparent. The Kaṭha's verb is vivinakti: the steady one 'examines and separates'. Śaṅkara compares it to the swan that separates milk from water.",
+      "teaches": [
+        { "verse": "KaU_1.2.2", "why": "'Examining both, the steady one separates them' (samparītya vivinakti)." },
+        { "verse": "KaU_1.3.6", "why": "With discernment the mind is held steady and the senses obey, like good horses." },
+        { "verse": "MuU_1.2.12", "why": "Having examined the worlds won by works, the seeker turns away from them." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "satya", "sa": "सत्य", "iast": "satya", "en": "truth", "category": "truth",
+      "desc": "Truthfulness in speech, and the Real itself. 'Truth alone triumphs, not untruth.'",
+      "teaches": [
+        { "verse": "MuU_3.1.6", "why": "Truth alone triumphs, not untruth; by truth the path to the divine is laid." },
+        { "verse": "IU_15", "why": "The face of truth is hidden by a golden vessel; the seeker asks for it to be uncovered." },
+        { "verse": "TU_1.11", "why": "The teacher's parting instruction begins: speak the truth." },
+        { "verse": "ChU_4.4.5", "why": "Gautama accepts Satyakāma because he did not swerve from the truth about himself." }
+      ],
+      "contrasts": [{ "with": "anrta", "verse": "MuU_3.1.6", "why": "Satyam eva jayate, nānṛtam: truth wins, untruth does not." }]
+    },
+    {
+      "id": "anrta", "sa": "अनृत", "iast": "anṛta", "en": "untruth", "category": "truth",
+      "desc": "Falsehood, including the convenient falsehood. The Praśna warns that one who speaks untruth withers to the root.",
+      "teaches": [
+        { "verse": "PU_6.1", "why": "Sukeśa would rather say 'I do not know' than speak untruth, which withers a person to the root." },
+        { "verse": "MuU_3.1.6", "why": "Untruth does not triumph." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "vidya", "sa": "विद्या", "iast": "vidyā", "en": "knowledge (that frees)", "category": "knowledge",
+      "desc": "Knowledge in the sense that changes the knower, set against avidyā, the ignorance that mistakes the pleasant for the good.",
+      "teaches": [
+        { "verse": "KaU_1.2.4", "why": "Knowledge and ignorance lead far apart; Naciketas desires knowledge." },
+        { "verse": "IU_11", "why": "Crossing death by the one, one attains immortality by the other." }
+      ],
+      "contrasts": [{ "with": "avidya", "verse": "KaU_1.2.4", "why": "'Widely opposed and leading to different ends are these two: ignorance and what is known as knowledge.'" }]
+    },
+    {
+      "id": "avidya", "sa": "अविद्या", "iast": "avidyā", "en": "ignorance", "category": "knowledge",
+      "desc": "Not mere lack of facts: the confident misreading of what matters. Its signature is thinking oneself wise.",
+      "teaches": [
+        { "verse": "KaU_1.2.4", "why": "Ignorance is the opposite road to knowledge." },
+        { "verse": "KaU_1.2.5", "why": "Living in ignorance yet thinking themselves wise, they wander like the blind led by the blind." },
+        { "verse": "MuU_1.2.8", "why": "The same verse, repeated in the Muṇḍaka." },
+        { "verse": "IU_9", "why": "Those who worship ignorance enter blinding darkness." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "para-vidya", "sa": "परा विद्या", "iast": "parā vidyā", "en": "the higher knowledge", "category": "knowledge",
+      "desc": "The knowledge by which the imperishable is grasped, as distinct from all learning about it.",
+      "teaches": [
+        { "verse": "MuU_1.1.4", "why": "Two kinds of knowledge are to be known, the higher and the lower." },
+        { "verse": "MuU_1.1.5", "why": "The higher is that by which the imperishable is attained." }
+      ],
+      "contrasts": [{ "with": "apara-vidya", "verse": "MuU_1.1.4", "why": "The Muṇḍaka opens its teaching with this division." }]
+    },
+    {
+      "id": "apara-vidya", "sa": "अपरा विद्या", "iast": "aparā vidyā", "en": "the lower knowledge", "category": "knowledge",
+      "desc": "All learning, including the Vedas themselves, when it is information about the goal rather than arrival at it.",
+      "teaches": [
+        { "verse": "MuU_1.1.5", "why": "The four Vedas and the six auxiliary sciences are counted as the lower knowledge." },
+        { "verse": "ChU_7.1.3", "why": "Nārada has mastered every science, yet says: 'I know only the texts, not the Self.'" },
+        { "verse": "KaU_1.2.23", "why": "The Self is not attained by discourse, intellect or much learning." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "avijnata", "sa": "अविज्ञात", "iast": "avijñāta", "en": "knowing that one does not know", "category": "knowledge",
+      "desc": "The Kena's paradox of humility: it is understood by those who do not claim to understand it, and not understood by those who do.",
+      "teaches": [
+        { "verse": "KeU_2.1", "why": "'If you think you know it well, you surely know very little.'" },
+        { "verse": "KeU_2.2", "why": "'I do not think I know it well, nor that I do not know it.'" },
+        { "verse": "KeU_2.3", "why": "'It is not understood by those who understand; it is understood by those who do not.'" }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "abhimana", "sa": "अभिमान", "iast": "abhimāna", "en": "conceit", "category": "bondage",
+      "desc": "The pride of the one who thinks the victory, or the knowledge, is their own. In later texts this is ahaṃkāra.",
+      "teaches": [
+        { "verse": "KeU_3.1", "why": "The gods thought, 'This victory is ours, this glory is ours.'" },
+        { "verse": "ChU_6.1.2", "why": "Śvetaketu returns from study conceited, thinking himself learned, and stiff." },
+        { "verse": "KeU_2.1", "why": "Thinking 'I know it well' is the mark of knowing little." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "buddhi-sarathi", "sa": "बुद्धिः सारथिः", "iast": "buddhi as sārathi", "en": "the intellect as charioteer", "category": "self",
+      "desc": "The Kaṭha's chariot: the self is the rider, the body the chariot, the intellect the charioteer, the mind the reins, the senses the horses. The reins stay with the one who rides.",
+      "teaches": [
+        { "verse": "KaU_1.3.3", "why": "Know the self as the rider, the body as the chariot, the intellect as the charioteer, the mind as the reins." },
+        { "verse": "KaU_1.3.9", "why": "One whose charioteer is discernment and who holds the reins of the mind reaches the end of the road." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "indriya", "sa": "इन्द्रिय", "iast": "indriya", "en": "the senses (the horses)", "category": "bondage",
+      "desc": "The horses of the chariot. Unreined, they run wherever their objects pull them.",
+      "teaches": [
+        { "verse": "KaU_1.3.4", "why": "The senses are the horses; their objects are the roads they run on." },
+        { "verse": "KaU_1.3.5", "why": "Without discernment, the senses are like vicious horses." },
+        { "verse": "KaU_2.1.1", "why": "The senses were made outward-turning, so one looks outward, not within." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "pratyak", "sa": "प्रत्यगात्मा", "iast": "pratyag-ātmā", "en": "turning inward", "category": "self",
+      "desc": "Attention turned back towards the one who attends. A rare steady person, 'eyes turned inward', sees the inner self.",
+      "teaches": [
+        { "verse": "KaU_2.1.1", "why": "A rare steady person, desiring immortality, turned the eye inward and saw the inner self." },
+        { "verse": "KaU_2.1.2", "why": "The childish follow outward desires into the wide net of death." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "atman", "sa": "आत्मन्", "iast": "ātman", "en": "the Self", "category": "self",
+      "desc": "What one most essentially is: unborn, undying, the witness of every state.",
+      "teaches": [
+        { "verse": "KaU_1.2.18", "why": "The knowing Self is not born and does not die." },
+        { "verse": "MaU_2", "why": "This Self is Brahman; it has four quarters." },
+        { "verse": "IU_6", "why": "One who sees all beings in the Self, and the Self in all, does not recoil from anyone." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "brahman", "sa": "ब्रह्मन्", "iast": "brahman", "en": "Brahman, the Real", "category": "self",
+      "desc": "The ground of all that is, identical in the Upanishads' teaching with the Self.",
+      "teaches": [
+        { "verse": "MaU_2", "why": "'All this is Brahman. This Self is Brahman.'" },
+        { "verse": "KeU_1.4", "why": "What speech cannot express but by which speech is expressed: know that to be Brahman." },
+        { "verse": "TU_2.1", "why": "'Brahman is truth, knowledge, infinite.'" }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "acarya", "sa": "आचार्य", "iast": "ācārya", "en": "the qualified teacher", "category": "practice",
+      "desc": "The one who knows and can show. The Upanishads send the seeker to such a teacher, and warn that the truth taught by an inferior person is not understood.",
+      "teaches": [
+        { "verse": "MuU_1.2.12", "why": "Approach, fuel in hand, a teacher learned in the Veda and established in Brahman." },
+        { "verse": "KaU_1.2.8", "why": "Taught by an inferior person, it is not well understood." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "tapas", "sa": "तपस्", "iast": "tapas", "en": "disciplined inquiry", "category": "practice",
+      "desc": "Concentrated effort, here the effort of finding out for oneself. Varuṇa does not hand Bhṛgu the answer; he sends him to inquire.",
+      "teaches": [
+        { "verse": "TU_3.1", "why": "Bhṛgu asks his father to teach him Brahman; he is given clues and told to seek, and he undertakes tapas." },
+        { "verse": "TU_3.2", "why": "Bhṛgu reaches a first answer, returns, and is told again: seek to know Brahman by tapas." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "svadhyaya", "sa": "स्वाध्याय", "iast": "svādhyāya", "en": "one's own study", "category": "practice",
+      "desc": "Study and recitation as one's own practice, never to be neglected, paired in the Taittirīya with teaching others.",
+      "teaches": [
+        { "verse": "TU_1.9", "why": "Every virtue is listed together with 'study and teaching'." },
+        { "verse": "TU_1.11", "why": "'Do not neglect your own study.'" }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "da", "sa": "दाम्यत दत्त दयध्वम्", "iast": "dāmyata, datta, dayadhvam", "en": "restrain, give, be compassionate", "category": "practice",
+      "desc": "Prajāpati answers gods, humans and demons with the same syllable, Da, and each hears what they most need: self-restraint, giving, compassion.",
+      "teaches": [
+        { "verse": "BU_5.2.1", "why": "To the gods, Da means 'restrain yourselves'." },
+        { "verse": "BU_5.2.2", "why": "To humans, Da means 'give'." },
+        { "verse": "BU_5.2.3", "why": "To the demons, Da means 'be compassionate'; the thunder repeats it." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "kama", "sa": "काम", "iast": "kāma", "en": "desire", "category": "bondage",
+      "desc": "Desire as the seed of will and action: 'as one's desire is, so is one's will; as one's will, so one's deed.'",
+      "teaches": [
+        { "verse": "BU_4.4.5", "why": "A person is made of desire; desire becomes will, will becomes deed, deed becomes destiny." },
+        { "verse": "KaU_2.3.14", "why": "When all desires lodged in the heart fall away, the mortal becomes immortal." },
+        { "verse": "KaU_2.1.2", "why": "The childish run after outward desires." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "bhuman", "sa": "भूमन्", "iast": "bhūman", "en": "the boundless", "category": "self",
+      "desc": "Sanatkumāra's final teaching to Nārada: joy is in the boundless, not in the small.",
+      "teaches": [
+        { "verse": "ChU_7.23.1", "why": "'The boundless is joy; there is no joy in the small.'" },
+        { "verse": "ChU_7.24.1", "why": "Where one sees nothing else, hears nothing else: that is the boundless." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "sakshin", "sa": "साक्षी", "iast": "sākṣī", "en": "the one who looks on", "category": "self",
+      "desc": "Of two birds on one tree, one eats the sweet fruit and the other only looks on. The verse's word is abhicākaśīti, 'looks on'; the commentators call this witness the Self.",
+      "teaches": [
+        { "verse": "MuU_3.1.1", "why": "The other bird, not eating, looks on." },
+        { "verse": "MuU_3.1.2", "why": "When the grieving bird sees the other, the Lord, its sorrow ends." }
+      ],
+      "contrasts": [{ "with": "bhoktr", "verse": "MuU_3.1.1", "why": "Two birds, companions on one tree: one eats the sweet fruit, the other looks on." }]
+    },
+    {
+      "id": "bhoktr", "sa": "भोक्तृ", "iast": "bhoktṛ", "en": "the one who eats the fruit", "category": "bondage",
+      "desc": "The bird that eats the sweet fruit: experience consumed for its taste, and the grief that follows.",
+      "teaches": [
+        { "verse": "MuU_3.1.1", "why": "One bird eats the sweet fruit." },
+        { "verse": "MuU_3.1.2", "why": "Sunk on the same tree, the person grieves, deluded by helplessness." }
+      ],
+      "contrasts": []
+    },
+    {
+      "id": "turiya", "sa": "तुरीय", "iast": "turīya", "en": "the Fourth", "category": "self",
+      "desc": "Beyond waking, dream and deep sleep: the Self in itself, 'peaceful, auspicious, non-dual'.",
+      "teaches": [
+        { "verse": "MaU_7", "why": "The Fourth is neither inward- nor outward-knowing; it is the Self, to be known." },
+        { "verse": "MaU_12", "why": "The partless OM is the Fourth." }
+      ],
+      "contrasts": []
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+ "BG_2.20": {
+  "sa": [
+   "न जायते म्रियते वा कदाचि",
+   "न्नायं भूत्वा भविता वा न भूयः ।",
+   "अजो नित्यः शाश्वतोऽयं पुराणो",
+   "न हन्यते हन्यमाने शरीरे ॥"
+  ],
+  "iast": [
+   "na jāyate mriyate vā kadāci",
+   "nnāyaṃ bhūtvā bhavitā vā na bhūyaḥ |",
+   "ajo nityaḥ śāśvato’yaṃ purāṇo",
+   "na hanyate hanyamāne śarīre ||"
+  ],
+  "source": "GitaViśva gita-verses.json (gita/gita)"
+ },
+ "BG_2.19": {
+  "sa": [
+   "य एनं वेत्ति हन्तारं यश्चैनं मन्यते हतम् ।",
+   "उभौ तौ न विजानीतो नायं हन्ति न हन्यते ॥"
+  ],
+  "iast": [
+   "ya enaṃ vetti hantāraṃ yaścainaṃ manyate hatam |",
+   "ubhau tau na vijānīto nāyaṃ hanti na hanyate ||"
+  ],
+  "source": "GitaViśva gita-verses.json (gita/gita)"
+ },
+ "BG_2.29": {
+  "sa": [
+   "आश्चर्यवत्पश्यति कश्चिदेन",
+   "माश्चर्यवद्वदति तथैव चान्यः ।",
+   "आश्चर्यवच्चैनमन्यः श्रृणोति",
+   "श्रुत्वाप्येनं वेद न चैव कश्चित् ॥"
+  ],
+  "iast": [
+   "āścaryavatpaśyati kaścidena",
+   "māścaryavadvadati tathaiva cānyaḥ |",
+   "āścaryavaccainamanyaḥ śrṛṇoti",
+   "śrutvāpyenaṃ veda na caiva kaścit ||"
+  ],
+  "source": "GitaViśva gita-verses.json (gita/gita)"
+ },
+ "BG_8.11": {
+  "sa": [
+   "यदक्षरं वेदविदो वदन्ति",
+   "विशन्ति यद्यतयो वीतरागाः ।",
+   "यदिच्छन्तो ब्रह्मचर्यं चरन्ति",
+   "तत्ते पदं संग्रहेण प्रवक्ष्ये ॥"
+  ],
+  "iast": [
+   "yadakṣaraṃ vedavido vadanti",
+   "viśanti yadyatayo vītarāgāḥ |",
+   "yadicchanto brahmacaryaṃ caranti",
+   "tatte padaṃ saṃgraheṇa pravakṣye ||"
+  ],
+  "source": "GitaViśva gita-verses.json (gita/gita)"
+ },
+ "BG_15.1": {
+  "sa": [
+   "ऊर्ध्वमूलमधःशाखमश्वत्थं प्राहुरव्ययम् ।",
+   "छन्दांसि यस्य पर्णानि यस्तं वेद स वेदवित् ॥"
+  ],
+  "iast": [
+   "ūrdhvamūlamadhaḥśākhamaśvatthaṃ prāhuravyayam |",
+   "chandāṃsi yasya parṇāni yastaṃ veda sa vedavit ||"
+  ],
+  "source": "GitaViśva gita-verses.json (gita/gita)"
+ },
+ "RV_1.164.20": {
+  "iast": [
+   "dvā́ suparṇā́ sayújā sákhāyā samānáṁ vr̥kṣám pári ṣasvajāte táyor anyáḥ píppalaṁ svādv átty ánaśnann anyó abhí cākaśīti"
+  ],
+  "source": "VedAnvaya VEDAWEB b01_h164_20_aufrecht"
+ }
+}

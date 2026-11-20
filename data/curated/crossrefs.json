@@ -1,0 +1,58 @@
+{
+  "crossrefs": [
+    {
+      "a": "KaU_1.2.5",
+      "b": "MuU_1.2.8",
+      "kind": "identical",
+      "note": "The 'blind leading the blind' verse appears almost word for word in both Upanishads."
+    },
+    {
+      "a": "KaU_1.2.23",
+      "b": "MuU_3.2.3",
+      "kind": "identical",
+      "note": "'This Self is not attained by discourse, nor by intellect, nor by much learning.'"
+    },
+    {
+      "a": "KaU_2.2.15",
+      "b": "MuU_2.2.10",
+      "kind": "identical",
+      "note": "'There the sun does not shine, nor the moon and stars.'"
+    },
+    {
+      "a": "KaU_1.2.18",
+      "b": "BG_2.20",
+      "kind": "parallel",
+      "note": "'It is not born, nor does it die.' The Gītā reuses the Kaṭha's verse almost entirely."
+    },
+    {
+      "a": "KaU_1.2.19",
+      "b": "BG_2.19",
+      "kind": "parallel",
+      "note": "'If the slayer thinks he slays…' Both close with the same line: it neither slays nor is slain."
+    },
+    {
+      "a": "KaU_1.2.7",
+      "b": "BG_2.29",
+      "kind": "echo",
+      "note": "Both speak of the Self as a 'wonder': wondrous the one who teaches it, wondrous the one who sees it."
+    },
+    {
+      "a": "KaU_1.2.15",
+      "b": "BG_8.11",
+      "kind": "echo",
+      "note": "The goal 'that all the Vedas declare' (Kaṭha) and 'that the knowers of the Veda call imperishable' (Gītā)."
+    },
+    {
+      "a": "KaU_2.3.1",
+      "b": "BG_15.1",
+      "kind": "echo",
+      "note": "The same image, in different words: the eternal aśvattha tree with its roots above and branches below."
+    },
+    {
+      "a": "MuU_3.1.1",
+      "b": "RV_1.164.20",
+      "kind": "identical",
+      "note": "The two birds on one tree come from the Ṛgveda's riddle hymn of Dīrghatamas."
+    }
+  ]
+}

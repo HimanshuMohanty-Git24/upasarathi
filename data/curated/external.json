@@ -1,0 +1,17 @@
+{
+  "corpora": {
+    "BG": {
+      "name": "GitaViśva",
+      "title": "Bhagavad Gītā",
+      "url": "https://gitaviswa.vercel.app/?view=darshana&node={id}",
+      "chapterVerses": [47, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78]
+    },
+    "RV": {
+      "name": "VedAnvaya",
+      "title": "Ṛgveda",
+      "url": "",
+      "passageKey": "VG:RV:SAK:M{m:02}:S{s:03}:V{v:03}",
+      "note": "Set `url` to the deployed VedAnvaya origin followed by /passage/{key} to make RV links clickable."
+    }
+  }
+}

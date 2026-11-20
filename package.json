@@ -1,0 +1,39 @@
+{
+  "name": "upasarathi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UpaSārathi (उपसारथि): the Principal Upanishads as a knowledge graph, and an alignment harness that tests AI answers against them.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit && tsc -p tests",
+    "test": "node --test tests/*.test.ts",
+    "data:sources": "node scripts/ingest.mjs",
+    "data": "node scripts/build.mjs",
+    "data:verify": "node scripts/verify.mjs",
+    "runs:record": "node scripts/record-runs.mjs",
+    "runs:verify": "node scripts/verify-runs.mjs"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.12.0",
+    "dagre": "^0.8.5",
+    "next": "^15.5.28",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/dagre": "^0.7.54",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.2.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "postcss": "^8.5.32"
+  }
+}

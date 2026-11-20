@@ -1,0 +1,27 @@
+{
+  "texts": {
+    "complete": 5,
+    "excerpts": 4,
+    "total": 9
+  },
+  "mantras": {
+    "complete": 247,
+    "excerpts": 69,
+    "total": 316
+  },
+  "bhashyaVerses": 39,
+  "audioVerses": 248,
+  "concepts": 25,
+  "dilemmas": 10,
+  "stories": 9,
+  "persons": 19,
+  "paths": 5,
+  "axes": 6,
+  "presets": 6,
+  "nodes": 400,
+  "edges": 868,
+  "anchors": 77,
+  "crossCorpus": 8,
+  "runs": 6,
+  "corpusHash": "c40a032c"
+}

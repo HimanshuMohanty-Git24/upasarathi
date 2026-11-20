@@ -1,0 +1,79 @@
+{
+  "persons": [
+    { "id": "naciketas", "sa": "नचिकेता", "iast": "Naciketā", "role": "seeker" },
+    { "id": "yama", "sa": "यम", "iast": "Yama", "role": "teacher" },
+    { "id": "vajashravasa", "sa": "वाजश्रवस", "iast": "Vājaśravasa", "role": "father" },
+    { "id": "prajapati", "sa": "प्रजापति", "iast": "Prajāpati", "role": "teacher" },
+    { "id": "indra", "sa": "इन्द्र", "iast": "Indra", "role": "seeker" },
+    { "id": "virocana", "sa": "विरोचन", "iast": "Virocana", "role": "seeker" },
+    { "id": "satyakama", "sa": "सत्यकाम जाबाल", "iast": "Satyakāma Jābāla", "role": "seeker" },
+    { "id": "gautama", "sa": "हारिद्रुमत गौतम", "iast": "Hāridrumata Gautama", "role": "teacher" },
+    { "id": "uddalaka", "sa": "उद्दालक आरुणि", "iast": "Uddālaka Āruṇi", "role": "teacher" },
+    { "id": "shvetaketu", "sa": "श्वेतकेतु", "iast": "Śvetaketu", "role": "seeker" },
+    { "id": "narada", "sa": "नारद", "iast": "Nārada", "role": "seeker" },
+    { "id": "sanatkumara", "sa": "सनत्कुमार", "iast": "Sanatkumāra", "role": "teacher" },
+    { "id": "yajnavalkya", "sa": "याज्ञवल्क्य", "iast": "Yājñavalkya", "role": "teacher" },
+    { "id": "maitreyi", "sa": "मैत्रेयी", "iast": "Maitreyī", "role": "seeker" },
+    { "id": "bhrigu", "sa": "भृगु वारुणि", "iast": "Bhṛgu Vāruṇi", "role": "seeker" },
+    { "id": "varuna", "sa": "वरुण", "iast": "Varuṇa", "role": "teacher" },
+    { "id": "uma", "sa": "उमा हैमवती", "iast": "Umā Haimavatī", "role": "teacher" },
+    { "id": "sukesha", "sa": "सुकेशा भारद्वाज", "iast": "Sukeśā Bhāradvāja", "role": "seeker" },
+    { "id": "pippalada", "sa": "पिप्पलाद", "iast": "Pippalāda", "role": "teacher" }
+  ],
+  "stories": [
+    {
+      "id": "naciketas", "title": "Naciketas and Death",
+      "summary": "A boy given away to Death waits three nights at his door, is offered every pleasure in exchange for his question, and refuses them all.",
+      "cast": ["naciketas", "yama", "vajashravasa"],
+      "verses": ["KaU_1.1.1", "KaU_1.1.2", "KaU_1.1.20", "KaU_1.1.23", "KaU_1.1.26", "KaU_1.1.27", "KaU_1.2.1", "KaU_1.2.2", "KaU_1.2.3"]
+    },
+    {
+      "id": "indra-virocana", "title": "Indra and Virocana",
+      "summary": "Two students hear Prajāpati's first answer. Virocana leaves satisfied and teaches it to his people; Indra sees the flaw, returns three times, and is taught the truth after a hundred and one years.",
+      "cast": ["prajapati", "indra", "virocana"],
+      "verses": ["ChU_8.7.1", "ChU_8.7.2", "ChU_8.7.3", "ChU_8.7.4", "ChU_8.8.1", "ChU_8.8.2", "ChU_8.8.3", "ChU_8.8.4", "ChU_8.8.5", "ChU_8.9.1", "ChU_8.9.2", "ChU_8.9.3", "ChU_8.10.1", "ChU_8.10.2", "ChU_8.10.3", "ChU_8.10.4", "ChU_8.11.1", "ChU_8.11.2", "ChU_8.11.3", "ChU_8.12.1", "ChU_8.12.2", "ChU_8.12.3", "ChU_8.12.4", "ChU_8.12.5", "ChU_8.12.6"]
+    },
+    {
+      "id": "satyakama", "title": "Satyakāma tells the truth",
+      "summary": "Asked his lineage, a boy repeats his mother's honest answer that she does not know it. The teacher accepts him because he did not swerve from the truth.",
+      "cast": ["satyakama", "gautama"],
+      "verses": ["ChU_4.4.1", "ChU_4.4.2", "ChU_4.4.3", "ChU_4.4.4", "ChU_4.4.5"]
+    },
+    {
+      "id": "shvetaketu", "title": "Śvetaketu's pride",
+      "summary": "A young man returns from twelve years of study proud of his learning. His father asks whether he learned that by which the unheard becomes heard, and begins to teach him: 'You are that.'",
+      "cast": ["uddalaka", "shvetaketu"],
+      "verses": ["ChU_6.1.1", "ChU_6.1.2", "ChU_6.1.3", "ChU_6.1.4", "ChU_6.1.5", "ChU_6.1.6", "ChU_6.1.7", "ChU_6.8.7"]
+    },
+    {
+      "id": "narada", "title": "Nārada knows the texts",
+      "summary": "Nārada lists every science he has mastered and admits he is still in sorrow: he knows the words, not the Self. Sanatkumāra leads him to the boundless.",
+      "cast": ["narada", "sanatkumara"],
+      "verses": ["ChU_7.1.1", "ChU_7.1.2", "ChU_7.1.3", "ChU_7.1.4", "ChU_7.1.5", "ChU_7.23.1", "ChU_7.24.1"]
+    },
+    {
+      "id": "maitreyi", "title": "Maitreyī's question",
+      "summary": "Offered half of a household's wealth, Maitreyī asks the only question that matters: 'What should I do with that which will not make me immortal?'",
+      "cast": ["yajnavalkya", "maitreyi"],
+      "verses": ["BU_2.4.1", "BU_2.4.2", "BU_2.4.3", "BU_2.4.4", "BU_2.4.5"]
+    },
+    {
+      "id": "bhrigu", "title": "Bhṛgu learns by inquiry",
+      "summary": "Bhṛgu asks his father for Brahman. Varuṇa gives him clues and sends him to find out. Five times Bhṛgu returns with a deeper answer, until he reaches bliss.",
+      "cast": ["bhrigu", "varuna"],
+      "verses": ["TU_3.1", "TU_3.2", "TU_3.3", "TU_3.4", "TU_3.5", "TU_3.6"]
+    },
+    {
+      "id": "yaksha", "title": "The gods and the Yakṣa",
+      "summary": "The gods take a victory for their own. A mysterious being sets a blade of grass before Agni and Vāyu, who cannot burn or move it. Umā tells Indra who it was.",
+      "cast": ["indra", "uma"],
+      "verses": ["KeU_3.1", "KeU_3.2", "KeU_3.3", "KeU_3.4", "KeU_3.5", "KeU_3.6", "KeU_3.7", "KeU_3.8", "KeU_3.9", "KeU_3.10", "KeU_3.11", "KeU_3.12", "KeU_4.1", "KeU_4.2", "KeU_4.3"]
+    },
+    {
+      "id": "sukesha", "title": "Sukeśa will not lie",
+      "summary": "Sukeśa tells his teacher Pippalāda how a prince once asked him about the person of sixteen parts, and how he answered plainly that he did not know, because one who speaks untruth withers to the root.",
+      "cast": ["sukesha", "pippalada"],
+      "verses": ["PU_6.1"]
+    }
+  ]
+}

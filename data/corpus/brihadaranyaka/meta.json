@@ -1,0 +1,41 @@
+{
+  "id": "brihadaranyaka",
+  "abbrev": "BU",
+  "sa": "बृहदारण्यकोपनिषद्",
+  "iast": "Bṛhadāraṇyaka",
+  "en": "Brihadaranyaka Upanishad",
+  "veda": "Śukla Yajurveda",
+  "levels": [
+    "adhyāya",
+    "brāhmaṇa",
+    "mantra"
+  ],
+  "scope": "excerpts",
+  "order": 7,
+  "tagline": "Lead me from the unreal to the real; Maitreyī's question; Da, Da, Da.",
+  "ingest": {
+    "org": "brihadaranyaka",
+    "refs": [
+      "1.3.28",
+      "2.4.1-5",
+      "4.4.5",
+      "5.2.1-3"
+    ],
+    "pdf": {
+      "start": "^Brihadaranyaka Upanishad$",
+      "end": "Here ends the Brihadaranyopanishad",
+      "marker": "^([IVXL]+)-([ivxl]+)-(\\d{1,3}(?:-\\d{1,3})?)[:.]\\s*(.*)$",
+      "ref": [
+        "R$1",
+        "R$2",
+        "$3"
+      ],
+      "text": 4
+    },
+    "bhashya": {
+      "book": "the-brihadaranyaka-upanishad",
+      "translator": "Swami Madhavananda",
+      "edition": "1934"
+    }
+  }
+}
