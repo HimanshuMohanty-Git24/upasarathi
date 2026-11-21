@@ -1,7 +1,8 @@
 "use client";
 // The default map view: one node and its most meaningful neighbours (never more than 15), laid out radially in crisp
 // HTML with React Flow. Fully keyboard-navigable: Tab or the arrow keys move between nodes, Enter re-centres,
-// Backspace goes back. With nothing selected it shows the root map: five Vedas and the thirteen Upanishads they distil.
+// Backspace goes back. With nothing selected it shows the root map: the four Vedas and the thirteen Upanishads they
+// distil (the Yajurveda's texts labelled by section, Śukla or Kṛṣṇa).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReactFlow, Handle, Position, type Edge, type Node, type NodeProps, type ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -85,6 +86,15 @@ export default function FocusGraph({ graph, ix }: { graph: GraphData; ix: KbInde
     return () => mq.removeEventListener("change", on);
   }, []);
   const textOf = useMemo(() => new Map(ix.texts.map((t) => [t.id, t])), [ix]);
+  /** A Veda's Upanishads, the Yajurveda's grouped by section (Śukla first). */
+  const textsOf = useCallback(
+    (v: string) => ix.texts.filter((t) => t.lineage?.veda === v).sort((a, b) => (a.lineage?.section ?? "").localeCompare(b.lineage?.section ?? "") * -1 || a.order - b.order),
+    [ix],
+  );
+  const sectionShort = useCallback((up?: string) => {
+    const l = up ? textOf.get(up)?.lineage : undefined;
+    return l?.sectionLabel ? `${l.sectionLabel.split(" ")[0]} section` : undefined;
+  }, [textOf]);
 
   const view = useMemo(() => {
     const center = selected && gi.nodes.has(selected) ? selected : null;
@@ -122,11 +132,11 @@ export default function FocusGraph({ graph, ix }: { graph: GraphData; ix: KbInde
     let pos: Map<string, { x: number; y: number }>;
     if (view.mode === "roots") {
       pos = new Map();
-      // Two columns (Ṛg and the two Yajus; Sāma and Atharva), so the map stays wide rather than tall and legible.
+      // Two columns (Ṛg and Yajus; Sāma and Atharva), so the map stays wide rather than tall, and legible.
       const rows = [0, 0];
       VEDA_ORDER.forEach((v, i) => {
-        const col = i < 3 ? 0 : 1;
-        const ups = ix.texts.filter((t) => t.lineage?.veda === v);
+        const col = i < 2 ? 0 : 1;
+        const ups = textsOf(v);
         const first = rows[col];
         ups.forEach((t) => pos.set(`up:${t.id}`, { x: col * 820 + 380, y: rows[col]++ * 74 }));
         pos.set(`veda:${v}`, { x: col * 820, y: ((first + rows[col] - 1) / 2) * 74 });
@@ -144,7 +154,7 @@ export default function FocusGraph({ graph, ix }: { graph: GraphData; ix: KbInde
           id,
           type: "f",
           position: { x: p.x - W / 2, y: p.y - 30 },
-          data: { n, centre: id === view.center, on: Boolean(lit?.has(id)), dim: Boolean(lit && !lit.has(id)), text: n.type === "Verse" ? textOf.get(n.up ?? "")?.iast : undefined, lr: view.mode !== "focus" },
+          data: { n, centre: id === view.center, on: Boolean(lit?.has(id)), dim: Boolean(lit && !lit.has(id)), text: n.type === "Verse" ? textOf.get(n.up ?? "")?.iast : n.type === "Upanishad" && view.mode === "roots" ? sectionShort(n.up) : undefined, lr: view.mode !== "focus" },
           ariaLabel: `${KIND[n.type]}: ${n.label}`,
         };
       });
@@ -207,7 +217,7 @@ export default function FocusGraph({ graph, ix }: { graph: GraphData; ix: KbInde
     const groups = new Map<string, GNode[]>();
     for (const n of nodes) if (n.id !== view.center) (groups.get(n.type) ?? groups.set(n.type, []).get(n.type)!).push(n);
     return (
-      <div className="focus-list scroll-thin absolute inset-0 overflow-y-auto px-3 pb-28 pt-[252px]" aria-label={centre ? `Focus on ${centre.label}` : "Root map: the five Vedas and the thirteen Upanishads"}>
+      <div className="focus-list scroll-thin absolute inset-0 overflow-y-auto px-3 pb-28 pt-[252px]" aria-label={centre ? `Focus on ${centre.label}` : "Root map: the four Vedas and the thirteen Upanishads"}>
         {centre && (
           <div className="rf-node fg-node mb-4 !max-w-none" data-centre="1">
             <div className="k"><span className="dot" style={{ background: KIND_COLOR[centre.type] }} />{KIND[centre.type]}</div>
@@ -226,8 +236,11 @@ export default function FocusGraph({ graph, ix }: { graph: GraphData; ix: KbInde
                     <div className="font-semibold">{veda.label}</div>
                   </button>
                   <div className="ml-4 mt-1.5 grid grid-cols-2 gap-1.5 border-l border-line-2 pl-3">
-                    {ix.texts.filter((t) => t.lineage?.veda === v).map((t) => (
-                      <button key={t.id} className="rf-node !max-w-none text-left" onClick={() => explore.select(`up:${t.id}`)}>{t.iast}</button>
+                    {textsOf(v).map((t) => (
+                      <button key={t.id} className="rf-node !max-w-none text-left" onClick={() => explore.select(`up:${t.id}`)}>
+                        {t.iast}
+                        {sectionShort(t.id) && <span className="block text-[10.5px] uppercase tracking-wider text-text-4">{sectionShort(t.id)}</span>}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -252,7 +265,7 @@ export default function FocusGraph({ graph, ix }: { graph: GraphData; ix: KbInde
   }
 
   return (
-    <div ref={wrap} className="focus-graph absolute inset-0" onKeyDown={onKeyDown} role="application" aria-label={view.center ? `Focus on ${gi.nodes.get(view.center)?.label}. Arrow keys move between nodes, Enter re-centres, Backspace goes back, Escape returns to the root map.` : "Root map: the five Vedas and the thirteen Upanishads. Arrow keys move, Enter opens."}>
+    <div ref={wrap} className="focus-graph absolute inset-0" onKeyDown={onKeyDown} role="application" aria-label={view.center ? `Focus on ${gi.nodes.get(view.center)?.label}. Arrow keys move between nodes, Enter re-centres, Backspace goes back, Escape returns to the root map.` : "Root map: the four Vedas and the thirteen Upanishads. Arrow keys move, Enter opens."}>
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}

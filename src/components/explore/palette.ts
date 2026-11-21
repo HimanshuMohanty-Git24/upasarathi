@@ -41,8 +41,8 @@ export const TEXT_HEX: Record<"dark" | "light", Record<string, string>> = {
   },
 };
 export const VEDA_HEX: Record<"dark" | "light", Record<string, string>> = {
-  dark: { rig: "#ef8f8f", "yajur-shukla": "#f3cf7a", "yajur-krishna": "#f0956c", sama: "#8fd6a6", atharva: "#9fa8f7" },
-  light: { rig: "#b23b3b", "yajur-shukla": "#8f6a12", "yajur-krishna": "#b7502a", sama: "#2f7a4a", atharva: "#4a52b8" },
+  dark: { rig: "#ef8f8f", yajur: "#f3cf7a", sama: "#8fd6a6", atharva: "#9fa8f7" },
+  light: { rig: "#b23b3b", yajur: "#8f6a12", sama: "#2f7a4a", atharva: "#4a52b8" },
 };
 
 export const TYPE_LABEL: Record<NodeType, string> = {

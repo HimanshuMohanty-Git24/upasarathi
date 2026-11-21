@@ -41,9 +41,12 @@ test("the mandatory passages are addressable: mahāvākyas, Uddālaka's analogie
   assert.ok(graph.edges.some((e) => e.type === "CROSS_REFERENCES" && [e.s, e.t].sort().join() === ["MuU_3.1.1", "SvU_4.6"].sort().join()));
 });
 
-test("Veda-Sāra: five Vedas, every Upanishad distils exactly one", () => {
+test("Veda-Sāra: four Vedas, every Upanishad distils exactly one; Yajurveda texts name their section", () => {
   const vedas = graph.nodes.filter((n) => n.type === "Veda").map((n) => n.id).sort();
-  assert.deepEqual(vedas, ["veda:atharva", "veda:rig", "veda:sama", "veda:yajur-krishna", "veda:yajur-shukla"]);
+  assert.deepEqual(vedas, ["veda:atharva", "veda:rig", "veda:sama", "veda:yajur"]);
+  const sections = Object.fromEntries(index.texts.filter((t) => t.lineage?.veda === "yajur").map((t) => [t.id, t.lineage!.section]));
+  assert.deepEqual(sections, { isha: "shukla", katha: "krishna", taittiriya: "krishna", brihadaranyaka: "shukla", shvetashvatara: "krishna", maitri: "krishna" });
+  for (const t of index.texts) if (t.lineage?.veda !== "yajur") assert.equal(t.lineage?.section, undefined, t.id);
   for (const t of index.texts) {
     const d = graph.edges.filter((e) => e.type === "DISTILLS" && e.s === `up:${t.id}`);
     assert.equal(d.length, 1, t.id);

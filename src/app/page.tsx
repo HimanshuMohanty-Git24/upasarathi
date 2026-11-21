@@ -28,7 +28,7 @@ export default function Home() {
   const hero = getRun(bench.hero);
   const heroCtx = hero ? runContext(hero, ["KaU_1.1.27"]) : null;
   // The Veda → Upanishad map: roots on the left, the texts that distil them on the right.
-  const vedaNodes: GNode[] = [...VEDA_ORDER.map((v) => graph.nodes.find((n) => n.id === `veda:${v}`)!), ...ix.texts.map((t) => graph.nodes.find((n) => n.id === `up:${t.id}`)!)].filter(Boolean).map((n) => (n.type === "Upanishad" ? { ...n, sub: undefined } : { ...n, sub: undefined }));
+  const vedaNodes: GNode[] = [...VEDA_ORDER.map((v) => graph.nodes.find((n) => n.id === `veda:${v}`)!), ...VEDA_ORDER.flatMap((v) => ix.texts.filter((t) => t.lineage?.veda === v).sort((x, y) => (y.lineage?.section ?? "").localeCompare(x.lineage?.section ?? "") || x.order - y.order)).map((t) => graph.nodes.find((n) => n.id === `up:${t.id}`)!)].filter(Boolean).map((n) => (n.type === "Upanishad" ? { ...n, sub: undefined } : { ...n, sub: undefined }));
   const vedaEdges: GEdge[] = ix.texts.map((t) => ({ s: `veda:${t.lineage?.veda}`, t: `up:${t.id}`, type: "PART_OF", basis: "text" }));
 
   return (
@@ -109,7 +109,7 @@ export default function Home() {
         <div className="gutter grid items-center gap-10 lg:grid-cols-[minmax(320px,0.7fr)_1.3fr] xl:gap-16">
           <div>
             <p className="eyebrow">Veda-Sāra · the roots</p>
-            <h2 className="display band-title mt-3">Five Vedas. Thirteen Upanishads. One essence.</h2>
+            <h2 className="display band-title mt-3">Four Vedas. Thirteen Upanishads. One essence.</h2>
             <p className="mt-5 max-w-[52ch] text-[16.5px] leading-relaxed text-text-2">
               Each Upanishad closes a Veda: the <i>Vedānta</i>, the end of the Veda, and its <i>sāra</i>, its essence. Follow a text back to its school and Brāhmaṇa, and a mantra back to the Saṃhitā hymn it takes up, like the two birds of <CiteChip id="MuU_3.1.1" label="MuU 3.1.1" />, first sung in the Ṛgveda.
             </p>
@@ -237,7 +237,7 @@ export default function Home() {
                   <span className="deva text-[17px] text-text-3" style={{ lineHeight: 1.2 }}>{t.sa}</span>
                 </span>
                 <span className="mt-2 block text-[14px] leading-relaxed text-text-3">{t.tagline}</span>
-                <span className="mt-4 block text-[12px] text-text-4">{t.count} passages · {t.lineage?.vedaLabel ?? t.veda}</span>
+                <span className="mt-4 block text-[12px] text-text-4">{t.count} passages · {t.lineage?.vedaLabel ?? t.veda}{t.lineage?.sectionLabel ? ` · ${t.lineage.sectionLabel.split(" ")[0]} section` : ""}</span>
               </span>
             </Link>
           ))}

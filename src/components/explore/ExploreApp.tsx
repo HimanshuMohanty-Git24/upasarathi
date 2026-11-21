@@ -120,7 +120,7 @@ export function ExploreApp() {
       <div className="pointer-events-none absolute left-3 top-3 z-10 flex max-w-[calc(100vw-24px)] flex-col gap-2 sm:left-5 sm:top-5">
         <div className="glass pointer-events-auto px-4 py-3.5 sm:px-5">
           <p className="eyebrow !text-[10.5px]">The map · Veda → Upanishad → mantra</p>
-          <h1 className="display mt-0.5 text-[21px] sm:text-[24px]">{st.view === "focus" && selectedNode ? selectedNode.label : "Five Vedas, thirteen Upanishads"}</h1>
+          <h1 className="display mt-0.5 text-[21px] sm:text-[24px]">{st.view === "focus" && selectedNode ? selectedNode.label : "Four Vedas, thirteen Upanishads"}</h1>
           <p className="mt-1 hidden text-[12.5px] text-text-3 sm:block">
             {graph ? `${counts.Verse} passages · ${counts.Concept} concepts · ${counts.Story} stories · ${counts.Stem} key words · ${graph.edges.length.toLocaleString()} links` : "Loading…"}
           </p>

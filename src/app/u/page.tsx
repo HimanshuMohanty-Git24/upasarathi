@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Read the 13 Principal Upanishads", d
 export default function TextsPage() {
   const ix = getIndex();
   const facts = getFacts();
-  const byVeda = VEDA_ORDER.map((v) => ({ veda: ix.vedas.find((x) => x.id === v)!, texts: ix.texts.filter((t) => t.lineage?.veda === v).sort((a, b) => a.order - b.order) })).filter((g) => g.veda && g.texts.length);
+  const byVeda = VEDA_ORDER.map((v) => ({ veda: ix.vedas.find((x) => x.id === v)!, texts: ix.texts.filter((t) => t.lineage?.veda === v).sort((a, b) => (b.lineage?.section ?? "").localeCompare(a.lineage?.section ?? "") || a.order - b.order) })).filter((g) => g.veda && g.texts.length);
   return (
     <>
       <Ready />
@@ -42,6 +42,7 @@ export default function TextsPage() {
                   <span className="display mt-1 text-[28px]">{t.iast}</span>
                   <span className="mt-2 text-[14px] leading-relaxed text-text-3">{t.tagline}</span>
                   <span className="mt-auto flex flex-wrap gap-1.5 pt-5 text-[11.5px] text-text-4">
+                    {t.lineage?.sectionLabel && (<><span className="text-text-3">{t.lineage.sectionLabel.split(" ")[0]} section</span><span>·</span></>)}
                     <span>{t.lineage?.school}</span>
                     <span>·</span>
                     <span>{t.audio ? "chant" : "no chant"}</span>

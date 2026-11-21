@@ -62,6 +62,10 @@ export async function compile(ROOT) {
     const lin = roots.lineage[meta.id];
     const veda = roots.vedas.find((x) => x.id === lin?.veda);
     if (!lin || !veda) err(`${meta.id}: no Veda lineage in vedic-roots.json`);
+    // A Veda with sections (the Yajurveda: Śukla and Kṛṣṇa) is still one Veda; each text names its section.
+    const section = veda?.sections ? veda.sections.find((x) => x.id === lin?.section) : null;
+    if (veda?.sections && !section) err(`${meta.id}: the ${veda.label} has sections (${veda.sections.map((x) => x.id).join(", ")}); lineage must name one`);
+    if (!veda?.sections && lin?.section) err(`${meta.id}: lineage names a section but the ${veda?.label ?? lin.veda} has none`);
     const mantras = vs.filter((v) => !v.shanti);
     texts.push({
       id: meta.id, abbrev: meta.abbrev, sa: meta.sa, iast: meta.iast, en: meta.en, veda: meta.veda, levels: meta.levels,
@@ -71,7 +75,7 @@ export async function compile(ROOT) {
       audio: vs.some((v) => v.audio && !v.shanti) ? { whole: "", durationSec: 0, chanter: null } : null,
       bhashya: meta.ingest?.bhashya ? { translator: meta.ingest.bhashya.translator, edition: meta.ingest.bhashya.edition } : null,
       translation: meta.translation === "partial" ? "partial" : "complete",
-      lineage: lin && veda ? { veda: veda.id, vedaLabel: veda.label, school: lin.school, seat: lin.seat, kind: lin.kind } : undefined,
+      lineage: lin && veda ? { veda: veda.id, vedaLabel: veda.label, ...(section ? { section: section.id, sectionLabel: `${section.label} ${veda.label}` } : {}), school: lin.school, seat: lin.seat, kind: lin.kind } : undefined,
       analysed: vs.filter((v) => v.words?.length).length,
       commented: vs.filter((v) => v.hasBhashya).length,
     });
@@ -116,7 +120,7 @@ export async function compile(ROOT) {
   for (const v of roots.vedas) addNode({ id: `veda:${v.id}`, type: "Veda", label: v.label, sub: v.essence });
   for (const t of texts) {
     addNode({ id: `up:${t.id}`, type: "Upanishad", label: t.iast, sub: t.en, up: t.id });
-    if (t.lineage) addEdge({ s: `up:${t.id}`, t: `veda:${t.lineage.veda}`, type: "DISTILLS", basis: "text", why: `${t.iast}: ${t.lineage.seat}.` });
+    if (t.lineage) addEdge({ s: `up:${t.id}`, t: `veda:${t.lineage.veda}`, type: "DISTILLS", basis: "text", why: `${t.iast}${t.lineage.sectionLabel ? ` (${t.lineage.sectionLabel})` : ""}: ${t.lineage.seat}.` });
   }
   for (const t of texts) for (const v of verses.filter((x) => x.up === t.id).sort((a, b) => a.order - b.order)) addNode({ id: v.id, type: "Verse", label: v.shanti ? `${t.abbrev} śānti` : `${t.abbrev} ${v.ref}`, up: v.up, ref: v.ref });
   for (const c of concepts) {

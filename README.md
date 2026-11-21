@@ -59,7 +59,7 @@ Also: `/about` (sources, translators, recensions, Veda-Sāra, method, coverage, 
 
 ## The map
 
-- **Focus (default).** One node and its most meaningful neighbours, never more than 15, in crisp 2D (React Flow). Fully keyboard-navigable: Tab or the arrow keys move between nodes, Enter re-centres, Backspace goes back, Escape returns to the root map (five Vedas and their thirteen Upanishads).
+- **Focus (default).** One node and its most meaningful neighbours, never more than 15, in crisp 2D (React Flow). Fully keyboard-navigable: Tab or the arrow keys move between nodes, Enter re-centres, Backspace goes back, Escape returns to the root map (the four Vedas and their thirteen Upanishads; the Yajurveda’s texts are labelled by section, Śukla or Kṛṣṇa).
 - **Vedic Roots (Sāra).** A lens that adds the lineage chain (mantra → Upanishad → Veda) and the Saṃhitā mantra a passage takes up (e.g. the two birds, MuU 3.1.1 ≡ ŚU 4.6 ≡ RV 1.164.20).
 - **Find a path.** The most meaningful short route between any two points; passing through a whole text, a Veda or a common word costs more than a teaching, a story or a citation.
 - **Whole map** (2D canvas, grouped by Veda) and **3D cosmos** remain as optional views. The 3D view needs WebGL; everything else works without it.

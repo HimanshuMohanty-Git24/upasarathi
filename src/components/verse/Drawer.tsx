@@ -106,7 +106,7 @@ export function SourceBody({ id, onNavigate, inExplore = false }: { id: string; 
             {texts.map((t) => (
               <li key={t.id} className="card-soft p-3">
                 <Link href={`/u/${t.id}`} className="font-semibold hover:text-accent">{t.iast} Upaniṣad</Link>
-                <p className="text-[12.5px] text-text-3">{t.lineage?.school} · {t.lineage?.seat}</p>
+                <p className="text-[12.5px] text-text-3">{t.lineage?.sectionLabel ? `${t.lineage.sectionLabel.split(" ")[0]} section · ` : ""}{t.lineage?.school} · {t.lineage?.seat}</p>
               </li>
             ))}
           </ul>

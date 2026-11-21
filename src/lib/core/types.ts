@@ -72,7 +72,7 @@ export interface TextMeta {
   /** "partial" when some passages have Sanskrit and IAST but no English yet (stated on the page and in /about). */
   translation?: "complete" | "partial";
   /** Veda-Sāra lineage: which Veda, school and Brāhmaṇa or Āraṇyaka this Upanishad closes. */
-  lineage?: { veda: string; vedaLabel: string; school: string; seat: string; kind: string };
+  lineage?: { veda: string; vedaLabel: string; section?: string; sectionLabel?: string; school: string; seat: string; kind: string };
   /** Passages with a word-by-word analysis. */
   analysed?: number;
   /** Passages with Śaṅkara's commentary. */
@@ -234,6 +234,8 @@ export interface VedaInfo {
   sa: string;
   essence: string;
   vedanvaya: string | null;
+  /** The Yajurveda's two sections (Śukla and Kṛṣṇa): one Veda, two recensions. */
+  sections?: { id: string; label: string; en: string; sa: string; note: string }[];
 }
 /** The index: everything except the passages themselves (public/data/index.json, small, loaded up front). */
 export interface KbIndex {

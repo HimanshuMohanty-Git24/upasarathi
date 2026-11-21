@@ -12,7 +12,8 @@ export const VELOCITY_DECAY = 0.36;
 export const CHARGE = { strength: -22, distanceMax: 380 };
 
 /** Veda sectors in ring order; each Upanishad's position is set by its Veda and its order within it. */
-export const VEDA_ORDER = ["rig", "yajur-shukla", "yajur-krishna", "sama", "atharva"];
+/** The four Vedas, in their traditional order. The Yajurveda's two sections (Śukla, Kṛṣṇa) are one Veda. */
+export const VEDA_ORDER = ["rig", "yajur", "sama", "atharva"];
 
 const LINK_DIST: Record<string, number> = { PART_OF: 42, NEXT: 10, TEACHES: 420, DIAGNOSES: 420, IN_STORY: 360, CONTRASTS_WITH: 80, GROUNDS: 90, CROSS_REFERENCES: 260, ROOTED_IN: 260, READ_BY: 260, CITES: 300 };
 const LINK_STR: Record<string, number> = { PART_OF: 0.85, NEXT: 0.45, TEACHES: 0.006, DIAGNOSES: 0.006, IN_STORY: 0.01, CONTRASTS_WITH: 0.25, GROUNDS: 0.2, CROSS_REFERENCES: 0.004, ROOTED_IN: 0.01, READ_BY: 0.008, CITES: 0.003 };

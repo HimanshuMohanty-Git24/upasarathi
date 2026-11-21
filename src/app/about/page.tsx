@@ -155,16 +155,16 @@ export default function AboutPage() {
       <section id="veda-sara" className="mt-20 scroll-mt-24">
         <h2 className="display text-[32px]">Veda-Sāra: each Upanishad and its Veda</h2>
         <p className="mt-3 max-w-[80ch] text-[15px] leading-relaxed text-text-2">
-          The Upanishads close the Vedas (Vedānta, “the end of the Veda”) and distil them (<i>sāra</i>, essence). Each text is linked to its Veda, school (śākhā) and the Saṃhitā, Brāhmaṇa or Āraṇyaka it belongs to. Where an Upanishad takes up a Saṃhitā mantra, the link names it as identical or a parallel, checked against the Saṃhitā text by wording similarity at build time. Key Brahma Sūtra readings of Upanishad passages are linked as editorial.
+          The Upanishads close the four Vedas (Vedānta, “the end of the Veda”) and distil them (<i>sāra</i>, essence). The Yajurveda is one Veda in two sections, Śukla (“white”) and Kṛṣṇa (“black”); its texts name their section. Each text is linked to its Veda, school (śākhā) and the Saṃhitā, Brāhmaṇa or Āraṇyaka it belongs to. Where an Upanishad takes up a Saṃhitā mantra, the link names it as identical or a parallel, checked against the Saṃhitā text by wording similarity at build time. Key Brahma Sūtra readings of Upanishad passages are linked as editorial.
         </p>
-        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {byVeda.map(({ veda, texts }) => (
             <div key={veda.id} className="tile p-5">
               <p className="text-[17px] font-semibold">{veda.label} <span className="deva text-[15px] text-text-3">{veda.sa}</span></p>
               <p className="mt-1 text-[13px] text-text-3">{veda.essence}</p>
               <ul className="mt-3 space-y-2 text-[13px]">
                 {texts.map((t) => (
-                  <li key={t.id}><Link href={`/u/${t.id}`} className="font-semibold hover:text-accent">{t.iast}</Link><span className="block text-text-3">{t.lineage?.school} · {t.lineage?.seat}</span></li>
+                  <li key={t.id}><Link href={`/u/${t.id}`} className="font-semibold hover:text-accent">{t.iast}</Link>{t.lineage?.sectionLabel && <span className="text-text-3"> · {t.lineage.sectionLabel.split(" ")[0]} section</span>}<span className="block text-text-3">{t.lineage?.school} · {t.lineage?.seat}</span></li>
                 ))}
               </ul>
             </div>
