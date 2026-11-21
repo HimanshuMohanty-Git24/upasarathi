@@ -15,6 +15,8 @@ import { mkdir, readFile, readdir, writeFile, access } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { normDeva, devaToIast } from "../src/lib/core/text.ts";
+import { commentaryUnits, numberedSections, paragraphs, stripPageFurniture } from "./lib/ocr-book.mjs";
+import { OCR_SOURCES } from "./lib/ocr-sources.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CACHE = join(ROOT, ".cache");
@@ -256,7 +258,7 @@ function pageText(html) {
 const hasDeva = (s) => /[ऀ-ॿ]{3}/.test(s);
 const tidy = (s) => s.replace(/\s*\[\d+\]/g, "").replace(/\n{2,}/g, "\n").replace(/ ?• ?/g, " ").trim();
 function commentaryAfterTranslation(ls) {
-  const t = ls.findIndex((l) => /^\d+(-\d+)?\.\s/.test(l) && !hasDeva(l));
+  const t = ls.findIndex((l) => /^(\d+|l|I)([-–]\d+)?\.\s/.test(l) && !hasDeva(l)); // "l. Om. The head…" is a misprinted "1."
   return t >= 0 ? ls.slice(t + 1).filter((l) => !hasDeva(l) && !/\|\|/.test(l)).join("\n") : "";
 }
 function extractBhashya(text, mode, key) {
@@ -341,10 +343,152 @@ async function crawlBook(book, verses) {
   return found;
 }
 
+/** Walk a whole commentary book whose pages are laid out per section, and attach every verse block on it.
+ *    khanda   (Chāndogya, Ganganatha Jha) — the book index lists one page per khaṇḍa ("Section 4.4 …"); each page holds
+ *             "Upaniṣad text: … —(n)" / "Commentary (Śaṅkara Bhāṣya): …" blocks, numbered within the khaṇḍa.
+ *    heading  (Bṛhadāraṇyaka, Mādhavānanda) — pages are followed by their Next links from `from`; each holds
+ *             "Verse a.b.c:" blocks (Devanagari, IAST, numbered translation, commentary). A block is attached only when
+ *             its Devanagari carries the opening of our mantra. */
+/** A printed translation from its archive.org scan: { url, entries: { ref → text } } (see scripts/lib/ocr-sources.mjs). */
+async function ocrSource(key) {
+  const src = OCR_SOURCES[key];
+  if (!src) throw new Error(`unknown scan ${key}`);
+  const text = await cached(join(CACHE, "archive", src.cache), `https://archive.org/download/${src.item}/${encodeURIComponent(src.file)}`, 1500);
+  const entries = {};
+  if (src.kind === "commentary") Object.assign(entries, commentaryUnits(text, src.spec));
+  else if (src.kind === "excerpts") {
+    const all = text.split(/\r?\n/);
+    for (const x of src.excerpts) {
+      const s = all.findIndex((l, i) => i >= (x.startAfter || 0) && x.start.test(l.trim()));
+      const e = s < 0 ? -1 : all.findIndex((l, i) => i > s && x.end.test(l.trim()));
+      if (s < 0 || e < 0) throw new Error(`${key}: excerpt ${x.key} not found`);
+      // drop the book's editorial headings (short, no closing punctuation) between paragraphs
+      let t = paragraphs(stripPageFurniture(all.slice(s, e), { heads: src.heads })).filter((p) => /[.!?’”'")\]]$/.test(p) || p.length > 90).join(" ");
+      for (const [re, to] of src.fixes || []) t = t.replace(re, to);
+      if (x.from) t = t.slice(Math.max(0, t.indexOf(x.from)));
+      entries[x.key] = t;
+    }
+  } else for (const c of src.chapters) numberedSections(text, { start: c.start, end: c.end, count: c.count, heads: src.heads, startAfter: src.startAfter }).forEach((t, i) => (entries[`${c.ch}.${i + 1}`] = t));
+  if (src.chapters5) for (const c of src.chapters5) numberedSections(text, { ...c, heads: src.heads, startAfter: src.startAfter }).forEach((t, i) => (entries[`${c.ch}.${i + 1}`] = t));
+  return { url: `https://archive.org/details/${src.item}`, entries };
+}
+
+/** Consonant skeleton of Devanagari: editions differ in sandhi (उचुः त्वं / उचुस्त्वं), -m vs anusvāra and small typos. */
+const skeleton = (s) => normDeva(s).replace(/[ा-्ऀ-ः॑-॔ॢॣ]/g, "");
+function dice(a, b) {
+  const grams = (x) => { const m = new Map(); for (let i = 0; i < x.length - 1; i++) { const g = x.slice(i, i + 2); m.set(g, (m.get(g) || 0) + 1); } return m; };
+  const A = grams(a), B = grams(b);
+  let common = 0, total = 0;
+  for (const [g, n] of A) { common += Math.min(n, B.get(g) || 0); total += n; }
+  for (const n of B.values()) total += n;
+  return total ? (2 * common) / total : 0;
+}
+/** Does a commentary block's Devanagari open with this mantra? (compares the opening ~24 consonants) */
+const opensWith = (blockDeva, verseSa) => {
+  const v = skeleton(verseSa).slice(0, 24), b = skeleton(blockDeva).slice(0, 30);
+  return v.length < 6 || b.length < 6 || dice(v, b.slice(0, Math.max(v.length, 8))) >= 0.55 || b.includes(v.slice(0, 10));
+};
+async function walkBook(book, spec, verses, abbrev) {
+  const byRef = new Map(verses.map((v) => [v.ref, v]));
+  const found = {};
+  const misses = [];
+  if (spec.mode === "khanda") {
+    const index = await cached(join(CACHE, "wisdomlib", "_index", `${book}.html`), `https://www.wisdomlib.org/hinduism/book/${book}`);
+    // The chapter comes from the index's "Chapter N" entries: the book titles Chapter 8's pages "Section 7.x".
+    const pages = [];
+    let chapter = null;
+    for (const m of index.matchAll(new RegExp(`/hinduism/book/${book}/d/(doc\\d+)\\.html"[^>]*>\\s*(?:Chapter (\\d+)|Section (\\d+)\\.(\\d+)\\b)`, "g"))) {
+      if (m[2]) chapter = m[2];
+      else pages.push({ doc: m[1], p: chapter ?? m[3], k: m[4] });
+    }
+    for (const pg of pages) {
+      const html = await cached(join(CACHE, "wisdomlib", book, `${pg.doc}.html`), bookUrl(book, pg.doc), 900);
+      const blocks = pageText(html).split(/Upaniṣad text\s*:/i).slice(1);
+      for (const b of blocks) {
+        const [mula, ...rest] = b.split(/Commentary\s*\(Śaṅkara(?:’s)? Bhāṣya\)\s*:/i);
+        // one block may carry several mantras "—(1) … —(2) … —(3)" with a single joint commentary "(1-3)"
+        const nums = [...mula.matchAll(/\((\d+)(?:\s*[-–]\s*(\d+))?\)/g)].flatMap((x) => [Number(x[1]), Number(x[2] || x[1])]);
+        if (!nums.length || !rest.length) continue;
+        const body = tidy(rest.join("\n")).replace(/\s*—?\(\d+(?:[-–]\d+)?\)\.?\s*$/, "").replace(/\n?End of Section[\s\S]*$/i, "").trim();
+        if (body.length < 30) continue;
+        const from = Math.min(...nums), to = Math.max(...nums);
+        for (let n = from; n <= to; n++) {
+          const ref = `${pg.p}.${pg.k}.${n}`;
+          if (!byRef.has(ref)) { misses.push(`${abbrev} ${ref} (${pg.doc}: no such mantra)`); continue; }
+          if (found[`${abbrev}_${ref}`]) continue;
+          found[`${abbrev}_${ref}`] = { text: body, source: bookUrl(book, pg.doc), verifiedBy: "text-number", ...(to > from ? { joint: `${pg.p}.${pg.k}.${from}–${to}` } : {}) };
+        }
+      }
+    }
+  } else if (spec.mode === "heading") {
+    let page = spec.from;
+    const seen = new Set();
+    for (let hop = 0; page && hop < 2000 && !seen.has(page); hop++) {
+      seen.add(page);
+      const html = await cached(join(CACHE, "wisdomlib", book, `${page}.html`), bookUrl(book, page), 900);
+      // "Verse 2.4.1:" — on the first pages the colon is missing and the heading stands alone on its line
+      const parts = pageText(html).split(/(?:^|\n)Verse (\d+\.\d+\.\d+(?:\s*[-–]\s*\d+)?)\s*(?::|(?=\n))/);
+      for (let i = 1; i < parts.length; i += 2) {
+        const [ref, to] = parts[i].split(/\s*[-–]\s*/);
+        const ls = parts[i + 1].split("\n").map((l) => l.trim()).filter(Boolean);
+        const deva = ls.filter(hasDeva).join(" ");
+        const body = tidy(commentaryAfterTranslation(ls));
+        if (body.length < 30) continue;
+        const last = to ? `${ref.split(".").slice(0, 2).join(".")}.${to}` : ref;
+        const refs = verses.filter((v) => refKey(v.ref) >= refKey(ref) && refKey(v.ref) <= refKey(last)).map((v) => v.ref);
+        for (const r of refs) {
+          const v = byRef.get(r);
+          // a joint block opens with its first mantra only
+          if (r === refs[0] && deva && !opensWith(deva, v.sa.join(" "))) { misses.push(`${abbrev} ${r} (${page}: Devanagari differs)`); continue; }
+          if (found[v.id]) continue;
+          found[v.id] = { text: body, source: bookUrl(book, page), verifiedBy: deva ? "devanagari" : "text-number", ...(refs.length > 1 ? { joint: `${ref}–${last}` } : {}) };
+        }
+      }
+      const next = html.match(new RegExp(`href="/hinduism/book/${book}/d/(doc\\d+)\\.html"[^>]*title="[^"]*"\\s*>\\s*Next`, "i"))?.[1] || html.match(/href="\/hinduism\/book\/[^"]+\/d\/(doc\d+)\.html"[^>]*>\s*Next/i)?.[1];
+      page = next;
+    }
+  } else if (spec.mode === "anchored") {
+    // (Taittirīya, A. Mahadeva Sastri) — one passage is a whole anuvāka, which the book spreads over several pages,
+    // interleaving each sentence of the text (Devanagari, IAST, English) with the commentary on it. Pages are read in
+    // order; a passage begins where its opening Devanagari appears, and everything in English up to the next passage's
+    // opening is its commentary (the English renderings of the text's sentences stay inline, as the book prints them).
+    const order = verses.filter((v) => v.sa?.length);
+    const acc = new Map();
+    let cur = -1;
+    let page = spec.from;
+    const seen = new Set();
+    for (let hop = 0; page && hop < 800 && !seen.has(page); hop++) {
+      seen.add(page);
+      const html = await cached(join(CACHE, "wisdomlib", book, `${page}.html`), bookUrl(book, page), 900);
+      const lines = pageText(html).split("\n").map((l) => l.trim()).filter(Boolean);
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i];
+        if (hasDeva(l)) {
+          for (let j = cur + 1; j < Math.min(order.length, cur + 3); j++) {
+            if (opensWith(l, order[j].sa.join(" "))) { cur = j; acc.set(order[j].id, { lines: [], source: bookUrl(book, page) }); break; }
+          }
+          continue;
+        }
+        if (/\|\s*$|\|\|/.test(l) && /[āīūṛṃḥśṣṇṭḍ]/.test(l)) continue; // IAST of the line above
+        if (cur >= 0 && !/^(Footnotes and references|Previous|Next)\b/i.test(l)) acc.get(order[cur].id).lines.push(l);
+      }
+      if (spec.until && page === spec.until) break;
+      page = html.match(/href="\/hinduism\/book\/[^"]+\/d\/(doc\d+)\.html"[^>]*>\s*Next/i)?.[1];
+    }
+    for (const [vid, a] of acc) {
+      const text = tidy(a.lines.join("\n"));
+      if (text.length >= 60) found[vid] = { text, source: a.source, verifiedBy: "devanagari" };
+    }
+    for (const v of order) if (!acc.has(v.id)) misses.push(`${abbrev} ${v.ref} (opening not found)`);
+  }
+  return { found, misses };
+}
+
 // ── main ──────────────────────────────────────────────────────────────────────────────────────────
 const anchors = JSON.parse(await readFile(join(ROOT, "data", "curated", "anchors.json"), "utf8")).anchors;
 const shantiIndex = audioIndexAll.audio?.shanti || [];
-const ids = (await readdir(CORPUS, { withFileTypes: true })).filter((d) => d.isDirectory()).map((d) => d.name);
+const ONLY = process.argv.includes("--only") ? process.argv[process.argv.indexOf("--only") + 1].split(",") : null; // npm run data:sources -- --only chandogya,brihadaranyaka
+const ids = (await readdir(CORPUS, { withFileTypes: true })).filter((d) => d.isDirectory() && (!ONLY || ONLY.includes(d.name))).map((d) => d.name);
 const problems = [];
 
 for (const id of ids) {
@@ -395,6 +539,36 @@ for (const id of ids) {
   verses.sort((a, b) => refKey(a.ref).localeCompare(refKey(b.ref)));
   verses.forEach((v, i) => (v.order = i + 1));
 
+  // A second translation for the passages the first one leaves out (Maitrī: Hume 1921, from the archive.org scan).
+  if (ing.supplement?.ocr) {
+    try {
+      const got = await ocrSource(ing.supplement.ocr);
+      const entries = { ...got.entries };
+      // passages the source numbers differently, mapped by hand (see meta.json)
+      for (const [ours, spec] of Object.entries(ing.supplement.map || {})) {
+        const t = entries[spec.from];
+        if (!t) continue;
+        if (spec.lines) {
+          const flat = t.replace(/\n/g, " ");
+          const a = flat.indexOf(spec.lines[0]);
+          const b = spec.lines[1] ? flat.indexOf(spec.lines[1], a + 1) : -1;
+          if (a >= 0) entries[`=${ours}`] = flat.slice(spec.withIntro ? 0 : a, b > a ? b : undefined).trim();
+        } else entries[`=${ours}`] = t;
+      }
+      let n = 0;
+      for (const v of verses) {
+        if (v.tr || v.shanti) continue;
+        const text = entries[`=${v.ref}`] ?? (ing.supplement.map?.[v.ref] ? null : entries[v.ref]);
+        if (!text) continue;
+        v.tr = { text: text.replace(/\n/g, " "), by: ing.supplement.translator, source: `${ing.supplement.source} (archive.org scan)`, ocr: true };
+        n++;
+      }
+      log(`  ${id}: ${n} passage(s) translated from ${ing.supplement.translator}`);
+    } catch (e) {
+      problems.push(`${id}: supplementary translation failed: ${e.message}`);
+    }
+  }
+
   // Śaṅkara's commentary: the whole book where it can be walked, plus every anchor.
   const bhashya = {};
   if (ing.bhashya?.crawl) {
@@ -405,10 +579,33 @@ for (const id of ids) {
       problems.push(`${id}: commentary crawl failed: ${e.message}`);
     }
   }
+  if (ing.bhashya?.walk) {
+    try {
+      const { found, misses } = await walkBook(ing.bhashya.book, ing.bhashya.walk, verses.filter((v) => !v.shanti), meta.abbrev);
+      for (const [vid, b] of Object.entries(found)) bhashya[vid] = { author: "Śaṅkara", lang: "en", translator: ing.bhashya.translator, edition: ing.bhashya.edition, ...b };
+      if (misses.length) log(`  ${id}: ${misses.length} commentary block(s) not attached, e.g. ${misses.slice(0, 4).join("; ")}`);
+    } catch (e) {
+      problems.push(`${id}: commentary walk failed: ${e.message}`);
+    }
+  }
+  // Commentary that only a printed translation carries: read from the archive.org scan (OCR, cleaned).
+  if (ing.bhashya?.ocr) {
+    try {
+      const got = await ocrSource(ing.bhashya.ocr);
+      for (const [ref, text] of Object.entries(got.entries)) {
+        const v = verses.find((x) => x.ref === ref && !x.shanti);
+        if (!v) { log(`  ${id}: scan section ${ref} has no passage`); continue; }
+        if (text.length < 120) continue; // a joint commentary given at a neighbouring verse, or a scan gap
+        bhashya[v.id] = { author: ing.bhashya.author || "Śaṅkara", lang: "en", translator: ing.bhashya.translator, edition: ing.bhashya.edition, text, source: got.url, verifiedBy: "text-number", ocr: true, ...(ing.bhashya.note ? { note: ing.bhashya.note } : {}) };
+      }
+    } catch (e) {
+      problems.push(`${id}: commentary scan failed: ${e.message}`);
+    }
+  }
   const wantB = Object.entries(anchors).filter(([vid, a]) => a.bhashya && vid.startsWith(`${meta.abbrev}_`));
   if (wantB.length && !ing.bhashya) problems.push(`${id}: anchors ask for commentary but meta has no bhashya book`);
   for (const [vid, a] of wantB) {
-    if (!ing.bhashya || bhashya[vid]) continue;
+    if (!ing.bhashya?.book || bhashya[vid]) continue;
     try {
       const b = await fetchBhashya(ing.bhashya.book, a.bhashya, a.sa);
       bhashya[vid] = { author: "Śaṅkara", lang: "en", translator: ing.bhashya.translator, edition: ing.bhashya.edition, text: b.text, source: b.source, verifiedBy: b.verifiedBy };
@@ -452,12 +649,16 @@ if (await exists(rvFile)) {
     else problems.push(`${rv}: not found in VedAnvaya`);
   }
 }
-const yvFile = join(VEDA, "yajurveda_pilot_v1", "text_versions.jsonl");
-if (await exists(yvFile)) {
-  const ls = (await readFile(yvFile, "utf8")).split("\n").filter(Boolean).map((l) => JSON.parse(l));
+// The Vājasaneyi Saṃhitā: the pilot set (adhyāyas 1, 16, 31, 40), then the full Mādhyandina text (1–40).
+const yvFiles = ["yajurveda_pilot_v1", "yajurveda_vsm_v1"].map((d) => join(VEDA, d, "text_versions.jsonl"));
+if (await exists(yvFiles[0])) {
+  const ls = [];
+  for (const f of yvFiles) if (await exists(f)) ls.push(...(await readFile(f, "utf8")).split("\n").filter(Boolean).map((l) => JSON.parse(l)));
+  const accented = (t) => /[॒॑᳐-᳿꣠-ꣿ]/.test(t || "");
   for (const yv of [...wantExt].filter((s) => s.startsWith("YV_"))) {
     const ref = yv.slice(3);
-    const hit = ls.find((r) => r.source_locator?.endsWith(`#${ref}`));
+    const hits = ls.filter((r) => r.source_locator?.endsWith(`#${ref}`));
+    const hit = hits.find((r) => !accented(r.text_nfc)) || hits[0];
     if (hit) external[yv] = { sa: hit.text_nfc, source: `VedAnvaya ${hit.source_id} ${hit.source_locator}` };
     else problems.push(`${yv}: not found in VedAnvaya`);
   }

@@ -25,7 +25,12 @@
       "text": 4,
       "join": true
     },
-    "shanti": "Saha nāv avatu"
+    "shanti": "Saha nāv avatu",
+    "bhashya": {
+      "ocr": "gambhirananda-taittiriya",
+      "translator": "Swami Gambhirananda",
+      "edition": "Eight Upaniṣads, vol. 1 (Advaita Ashrama)"
+    }
   },
   "expect": 31
 }

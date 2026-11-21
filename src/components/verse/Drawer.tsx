@@ -7,6 +7,8 @@ import type { Bhashya, GraphData, KbIndex, Verse } from "@/lib/core/types";
 import { REL_LABEL } from "@/lib/core/graph";
 import { externalUrl } from "@/lib/config";
 import { AudioButton } from "./AudioButton";
+import { AiChantButton } from "@/components/tts/AiChantButton";
+import { ListenControls } from "@/components/tts/ListenControls";
 import { Lineage } from "./Lineage";
 import { WordStrip } from "./Words";
 import { Gloss } from "@/components/ui/Glossary";
@@ -246,7 +248,14 @@ function VerseView({ id, up, ix, graph, onNavigate, inExplore }: { id: string; u
       <Lineage text={t} compact roots={roots} />
       <div className="deva text-[20px]">{v.sa.map((l, i) => <div key={i}>{l}</div>)}</div>
       <div className="iast text-[15px]">{v.iast.map((l, i) => <div key={i}>{l}</div>)}</div>
-      {v.audio && <AudioButton src={v.audio.mp3} label="Hear the chant" track={{ id, label: `${t.abbrev} ${v.shanti ? "śānti" : v.ref}` }} />}
+      <div className="flex flex-wrap items-start gap-2">
+        {v.audio ? (
+          <AudioButton src={v.audio.mp3} label="Hear the chant" track={{ id, label: `${t.abbrev} ${v.shanti ? "śānti" : v.ref}` }} />
+        ) : (
+          <AiChantButton id={id} up={up} label={`${t.abbrev} ${v.shanti ? "śānti" : v.ref}`} />
+        )}
+        <ListenControls id={id} label={`${t.abbrev} ${v.shanti ? "śānti" : v.ref}`} translation={v.tr?.text} commentary={b?.text} />
+      </div>
       {v.tr ? (
         <figure className="card-soft p-4">
           <blockquote className="reading text-[16px]">{v.tr.text}</blockquote>
@@ -264,7 +273,7 @@ function VerseView({ id, up, ix, graph, onNavigate, inExplore }: { id: string; u
       {v.words && v.words.length > 0 && <WordStrip words={v.words} onOpen={onNavigate} />}
       {b && (
         <details className="card p-4">
-          <summary className="flex items-center justify-between"><span className="font-semibold">Śaṅkara&apos;s commentary</span><span className="text-[12px] text-text-3">tr. {b.translator}</span></summary>
+          <summary className="flex items-center justify-between"><span className="font-semibold">{b.author === "Śaṅkara" ? "Śaṅkara’s commentary" : `Commentary · ${b.author}`}</span><span className="text-[12px] text-text-3">tr. {b.translator}{b.ocr ? " · from a scan" : ""}</span></summary>
           <div className="reading mt-3 max-h-[42vh] overflow-y-auto whitespace-pre-line pr-1 text-[14.5px]">{b.text}</div>
           <a className="mt-2 inline-flex items-center gap-1 text-[12px] text-text-3 underline" href={b.source} target="_blank" rel="noreferrer">Source <IconExternal size={12} /></a>
         </details>

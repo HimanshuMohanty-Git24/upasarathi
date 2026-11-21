@@ -20,11 +20,19 @@ export interface ModelRow {
   tokens: { in: number; out: number };
   /** Mean seconds per side (answer time, including the follow-up turn). */
   secs: Record<Side, number | null>;
+  /** Spread of the per-run share across comparable runs (standard deviation, percentage points); null below 2 runs. */
+  sd: Record<Side, number | null>;
+  /** Samples recorded per preset for this model: fewest and most. */
+  n: { min: number; max: number };
+  /** Runs whose stored answers were re-scored by a cross-family judge. */
+  rejudged: number;
 }
 export interface PresetCell {
   model: string;
   runs: RunSummary[];
   pct: Record<Side, number | null>;
+  /** Comparable runs behind pct (n = 1 is a single sample). */
+  n: number;
 }
 export interface Bench {
   models: ModelRow[];
@@ -43,6 +51,17 @@ function pctOf(runs: RunSummary[]): Record<Side, number | null> {
   const ok = runs.filter((r) => r.status === "complete" && r.comparableAxes > 0);
   const max = ok.reduce((n, r) => n + r.max, 0);
   return Object.fromEntries(SIDES.map((s) => [s, max ? Math.round((ok.reduce((n, r) => n + (r.totals[s] ?? 0), 0) / max) * 100) : null])) as Record<Side, number | null>;
+}
+
+const comparableRuns = (runs: RunSummary[]) => runs.filter((r) => r.status === "complete" && r.comparableAxes > 0 && r.max > 0);
+function sdOf(runs: RunSummary[]): Record<Side, number | null> {
+  const ok = comparableRuns(runs);
+  return Object.fromEntries(SIDES.map((s) => {
+    if (ok.length < 2) return [s, null];
+    const xs = ok.map((r) => ((r.totals[s] ?? 0) / r.max) * 100);
+    const m = xs.reduce((a, b) => a + b, 0) / xs.length;
+    return [s, Math.round(Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length - 1)))];
+  })) as Record<Side, number | null>;
 }
 
 export function getBench(): Bench {
@@ -78,6 +97,12 @@ export function getBench(): Bench {
       wins,
       tokens: runs.reduce((t, r) => ({ in: t.in + (r.tokens?.in ?? 0), out: t.out + (r.tokens?.out ?? 0) }), { in: 0, out: 0 }),
       secs,
+      sd: sdOf(runs),
+      n: (() => {
+        const per = rubric.presets.map((p) => runs.filter((r) => r.preset === p.id).length);
+        return { min: Math.min(...per), max: Math.max(...per) };
+      })(),
+      rejudged: runs.filter((r) => r.rejudgedFrom).length,
     };
   });
   const presets = rubric.presets.map((p) => ({
@@ -87,7 +112,7 @@ export function getBench(): Bench {
     followUp: p.followUp ?? null,
     cells: ix.bench.map((m) => {
       const runs = ix.runs.filter((r) => r.preset === p.id && r.models.model === m.model).sort((a, b) => a.sample - b.sample);
-      return { model: short(m.model), runs, pct: pctOf(runs) };
+      return { model: short(m.model), runs, pct: pctOf(runs), n: comparableRuns(runs).length };
     }),
   }));
   const comparable = ix.runs.filter((r) => r.status === "complete" && r.comparableAxes > 0).length;

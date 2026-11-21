@@ -3,6 +3,9 @@
 //   GROQ_API_KEY=… npm run runs:record -- --samples 1       fewer samples
 //   GROQ_API_KEY=… npm run runs:record -- --only pushback   one preset
 //   GROQ_API_KEY=… npm run runs:record -- --fresh           re-record even what exists
+// Each model is judged by a model from a different family (no model grades itself or its sibling). A stored run whose
+// judge differs from BENCH is re-judged in place: the three recorded answers are kept, only stage E runs again, and the
+// previous verdict is kept under `rejudged` for provenance.
 // Each model is judged by a different model. Conditions run one after another (gentle on per-minute token limits);
 // per-minute limits are waited out; a daily limit stops cleanly and the next run resumes where this one stopped.
 // The Scripture Quote hero keeps its genuine Phase 0 baseline (gpt-oss-20b, sample 1), with provenance.
@@ -11,7 +14,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createEngine } from "../src/lib/core/engine.ts";
 import { corpusIndex } from "../src/lib/core/checks.ts";
-import { runHarness } from "../src/lib/core/pipeline.ts";
+import { runHarness, judgeRun } from "../src/lib/core/pipeline.ts";
 import { SIDES } from "../src/lib/core/judge.ts";
 import { complete } from "../src/lib/core/complete.ts";
 import { LlmError } from "../src/lib/core/llm.ts";
@@ -25,7 +28,7 @@ const SAMPLES = Number(flag("samples", "3"));
 const ONLY = flag("only", null);
 const FRESH = args.includes("--fresh");
 export const BENCH = [
-  { provider: "groq", model: "openai/gpt-oss-20b", judgeProvider: "groq", judgeModel: "openai/gpt-oss-120b" },
+  { provider: "groq", model: "openai/gpt-oss-20b", judgeProvider: "groq", judgeModel: "qwen/qwen3.8-27b" },
   { provider: "groq", model: "qwen/qwen3.8-27b", judgeProvider: "groq", judgeModel: "openai/gpt-oss-120b" },
   { provider: "groq", model: "openai/gpt-oss-120b", judgeProvider: "groq", judgeModel: "qwen/qwen3.8-27b" },
 ];
@@ -111,7 +114,7 @@ async function writeIndex() {
     runs.push({
       id: r.id, preset: r.preset, title: r.title, hook: r.hook, prompt: r.prompt, followUp: r.followUp, control: r.control, sharpened: r.sharpened,
       sample: r.sample, createdAt: r.createdAt, status: r.status, models: r.models, verdict: r.judge.verdict,
-      totals: r.judge.totals, max: r.judge.max, comparableAxes: r.judge.comparableAxes, dilemma: r.diagnosis.dilemmas[0]?.id ?? null, tokens: r.tokens,
+      totals: r.judge.totals, max: r.judge.max, comparableAxes: r.judge.comparableAxes, dilemma: r.diagnosis.dilemmas[0]?.id ?? null, tokens: r.tokens, ...(r.rejudged ? { rejudgedFrom: r.rejudged.previous.model } : {}),
       ms: { baseline: r.baseline?.ms ?? null, control: r.control_?.ms ?? null, realigned: r.realigned?.ms ?? null, judge: r.judge?.ms ?? null },
       scores: Object.fromEntries(rubric.axes.map((a) => [a.id, Object.fromEntries(SIDES.map((s) => [s, r.judge.scores?.[a.id]?.[s]?.score ?? null]))])),
     });
@@ -137,10 +140,32 @@ outer: for (let sample = 1; sample <= SAMPLES; sample++) {
       const id = runId(p.id, m.model, sample);
       const file = join(RUNS, `${id}.json`);
       if (!FRESH && (await exists(file))) {
-        try {
-          const prev = JSON.parse(await readFile(file, "utf8"));
-          if (prev.v === 2 && prev.status === "complete") continue;
-        } catch {}
+        let prev = null;
+        try { prev = JSON.parse(await readFile(file, "utf8")); } catch {}
+        const answered = prev?.v === 2 && SIDES.every((s) => (s === "control" ? prev.control_ : prev[s])?.text);
+        if (answered && prev.models.judgeModel !== m.judgeModel) {
+          // Same answers, new judge (cross-family): re-run stage E only.
+          const t0 = Date.now();
+          console.log(`▸ ${id} · re-judging with ${m.judgeModel} (was ${prev.models.judgeModel})`);
+          const before = { model: prev.judge.model ?? prev.models.judgeModel, totals: prev.judge.totals, max: prev.judge.max, comparableAxes: prev.judge.comparableAxes, verdict: prev.judge.verdict, tokens: prev.judge.tokens ?? null };
+          if (prev.judge.tokens) prev.tokens = { in: prev.tokens.in - prev.judge.tokens.in, out: prev.tokens.out - prev.judge.tokens.out };
+          try {
+            await judgeRun(rubric, transport, m, prev);
+          } catch (e) {
+            if (e instanceof LlmError && e.code === "rate-daily") { stopped = e.message; break outer; }
+            console.log(`  failed: ${e.message}`);
+            continue;
+          }
+          if (prev.judge.status !== "ok" && /per day|daily/i.test(prev.judge.error || "")) { stopped = prev.judge.error; break outer; }
+          prev.models = { ...m, sameJudge: m.judgeModel === m.model && m.judgeProvider === m.provider };
+          prev.rejudged = { at: new Date().toISOString(), previous: before };
+          await writeFile(file, JSON.stringify(prev, null, 1));
+          totals.runs++;
+          console.log(`  ${prev.status} · judge ${prev.judge.status} · ${SIDES.map((s) => `${s} ${prev.judge.totals?.[s] ?? "–"}`).join(" · ")} / ${prev.judge.max} (was ${SIDES.map((s) => before.totals?.[s] ?? "–").join("/")}) · ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+          await writeIndex();
+          continue;
+        }
+        if (prev?.v === 2 && prev.status === "complete") continue;
       }
       const t0 = Date.now();
       console.log(`▸ ${id}`);

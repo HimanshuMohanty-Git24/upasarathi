@@ -24,5 +24,5 @@ export function runContext(run: HarnessRun, extraVerses: string[] = []): RunCont
       }),
   );
   const facts = getFacts();
-  return { nodes, verses, axes: getRubric().axes, corpusSize: facts.mantras.total + facts.shanti };
+  return { nodes, verses, axes: getRubric().axes, corpusSize: facts.mantras.total };
 }

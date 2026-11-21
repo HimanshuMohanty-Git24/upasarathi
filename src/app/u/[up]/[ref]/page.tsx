@@ -7,6 +7,8 @@ import { REL_LABEL } from "@/lib/core/graph";
 import type { GEdge } from "@/lib/core/types";
 import { externalUrl, SITE_URL } from "@/lib/config";
 import { AudioButton } from "@/components/verse/AudioButton";
+import { AiChantButton } from "@/components/tts/AiChantButton";
+import { ListenControls } from "@/components/tts/ListenControls";
 import { CiteChip } from "@/components/verse/Drawer";
 import { Lineage } from "@/components/verse/Lineage";
 import { WordStrip } from "@/components/verse/Words";
@@ -95,6 +97,8 @@ export default async function VersePage({ params }: { params: Promise<{ up: stri
         <div className="v-iast iast mt-4 text-[17px]">{v.iast.map((l, k) => <div key={k}>{l}</div>)}</div>
         <div className="mt-6 flex flex-wrap gap-2">
           <AudioButton src={v.audio?.mp3} label="Hear the chant" track={{ id: v.id, label: `${t.abbrev} ${refLabel(v.ref)}` }} />
+          {!v.audio && <AiChantButton id={v.id} up={up} label={`${t.abbrev} ${refLabel(v.ref)}`} />}
+          <ListenControls id={v.id} label={`${t.abbrev} ${refLabel(v.ref)}`} translation={v.tr?.text} commentary={b?.text} />
           {fromHere >= 0 && chanted.length > 1 && <PlayQueue tracks={chanted} from={fromHere} title={`${t.iast} Upaniṣad`} label="Play on from here" />}
           <Link className="btn btn-sm" href={`/map?node=${encodeURIComponent(v.id)}`}><IconMap size={14} /> In the map</Link>
           <AskOpen className="btn btn-sm btn-ghost" question={`Explain ${t.abbrev} ${refLabel(v.ref)}: what is it saying, and what does it mean for how I live?`}><IconChat size={14} /> Ask about this mantra</AskOpen>
@@ -106,7 +110,7 @@ export default async function VersePage({ params }: { params: Promise<{ up: stri
           <figure className="v-tr mt-9 border-l-2 pl-6" style={{ borderColor: hue }}>
             <blockquote className="reading max-w-[68ch] text-[19px] leading-[1.75]"><Gloss max={4}>{v.tr.text}</Gloss></blockquote>
             <figcaption className="mt-3 text-[13px] text-text-3">
-              {v.tr.by} · in the tradition of Śaṅkara{v.tr.joint ? ` · this translation renders ${t.abbrev} ${v.tr.joint} together` : ""}
+              {v.tr.by}{v.tr.ocr ? ` · ${v.tr.source}, text read from a scan` : " · in the tradition of Śaṅkara"}{v.tr.joint ? ` · this translation renders ${t.abbrev} ${v.tr.joint} together` : ""}
             </figcaption>
           </figure>
         ) : (
@@ -141,15 +145,17 @@ export default async function VersePage({ params }: { params: Promise<{ up: stri
       </article>
 
       {/* ── right: commentary and connections ── */}
-      <aside className="scroll-thin min-w-0 space-y-6 xl:sticky xl:top-[calc(var(--nav-h)+28px)] xl:h-fit xl:max-h-[calc(100dvh-var(--nav-h)-48px)] xl:overflow-y-auto xl:pr-1">
+      <aside className="scroll-thin min-w-0 space-y-6 xl:sticky xl:top-[calc(var(--nav-h)+28px)] xl:h-fit xl:max-h-[calc(100dvh-var(--nav-h)-48px)] xl:overflow-y-auto xl:pb-24 xl:pr-1">
         {b ? (
           <details className="v-bhashya card p-5" open>
             <summary className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-[16px] font-semibold">Śaṅkara&apos;s commentary <span className="font-normal text-text-3">(bhāṣya)</span></span>
+              <span className="text-[16px] font-semibold">{b.author === "Śaṅkara" ? "Śaṅkara’s commentary" : `Commentary · ${b.author}`} <span className="font-normal text-text-3">(bhāṣya)</span></span>
+              {b.ocr && <span className="chip !text-[10.5px]" title="Read from an archive.org scan of the printed book and cleaned automatically; scanning errors remain, especially in transliterated Sanskrit">from a scan</span>}
             </summary>
-            <p className="mt-1 text-[12.5px] text-text-3">tr. {b.translator}, {b.edition}</p>
+            <p className="mt-1 text-[12.5px] text-text-3">tr. {b.translator}, {b.edition}{b.joint ? ` · one commentary on ${t.abbrev} ${b.joint}` : ""}</p>
+            {b.note && <p className="mt-1 text-[12.5px] text-text-3">{b.note}</p>}
             <div className="reading scroll-thin mt-3 max-h-[52vh] overflow-y-auto whitespace-pre-line pr-1 text-[15px]">{b.text}</div>
-            <a className="mt-3 inline-flex items-center gap-1 text-[12.5px] text-text-3 underline" href={b.source} target="_blank" rel="noreferrer">Source: Wisdom Library <IconExternal size={12} /></a>
+            <a className="mt-3 inline-flex items-center gap-1 text-[12.5px] text-text-3 underline" href={b.source} target="_blank" rel="noreferrer">Source: {b.source.includes("archive.org") ? "archive.org scan" : "Wisdom Library"} <IconExternal size={12} /></a>
           </details>
         ) : (
           <div className="v-bhashya rounded-2xl border border-dashed border-line-2 p-5 text-[13.5px] text-text-3">

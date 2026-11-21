@@ -30,8 +30,19 @@ export function getGraph(): GraphData {
 export const getRubric = () => read<Rubric>("rubric.json");
 export const getFacts = () => read<Facts>("facts.json");
 export const getPaths = () => read<{ paths: LearningPath[]; categories: Record<string, string> }>("paths.json").paths;
-export const getCorpus = (up: string) => read<Verse[]>(`corpus/${up}.json`);
-export const getBhashya = (up: string) => read<Record<string, Bhashya>>(`bhashya/${up}.json`);
+/** Chapter files of one Upanishad (corpus/<up>/<chapter>.json), in reading order. */
+const chapterFiles = (dir: string, up: string) =>
+  existsSync(join(D, dir, up)) ? readdirSync(join(D, dir, up)).filter((f) => f.endsWith(".json")).sort((a, b) => parseInt(a) - parseInt(b)).map((f) => `${dir}/${up}/${f}`) : [];
+export function getCorpus(up: string): Verse[] {
+  const key = `__corpus:${up}`;
+  if (!cache.has(key)) cache.set(key, chapterFiles("corpus", up).flatMap((f) => read<Verse[]>(f)).sort((a, b) => a.order - b.order));
+  return cache.get(key) as Verse[];
+}
+export function getBhashya(up: string): Record<string, Bhashya> {
+  const key = `__bhashya:${up}`;
+  if (!cache.has(key)) cache.set(key, Object.assign({}, ...chapterFiles("bhashya", up).map((f) => read<Record<string, Bhashya>>(f))));
+  return cache.get(key) as Record<string, Bhashya>;
+}
 
 export interface RunSummary {
   id: string;
@@ -46,6 +57,8 @@ export interface RunSummary {
   createdAt: string;
   status: string;
   models: HarnessModels & { sameJudge: boolean };
+  /** The judge whose verdict a re-judging replaced (cross-family re-scoring). */
+  rejudgedFrom?: string;
   verdict: Side | "tie" | null;
   totals: Partial<Record<Side, number>>;
   max: number;

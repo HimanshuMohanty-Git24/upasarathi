@@ -29,11 +29,12 @@ function fileSize() {
 }
 const COLOR: Record<Side, string> = { baseline: "var(--preyas)", control: "var(--control)", realigned: "var(--accent)" };
 
-function Bar({ side, pct }: { side: Side; pct: number | null }) {
+function Bar({ side, pct, sd }: { side: Side; pct: number | null; sd?: number | null }) {
   return (
     <div className="flex items-center gap-2">
       <div className="bar h-1.5 flex-1"><span style={{ width: `${pct ?? 0}%`, background: COLOR[side] }} /></div>
       <b className="num w-9 text-right text-[12.5px]" style={{ color: COLOR[side] }}>{pct === null ? "–" : `${pct}%`}</b>
+      {sd !== undefined && <span className="num w-8 text-[11px] text-text-4" title="Standard deviation of the per-run score across this model’s runs">{sd === null ? "" : `±${sd}`}</span>}
     </div>
   );
 }
@@ -102,12 +103,12 @@ export default function HarnessPage() {
             <tbody>
               {bench.models.map((m) => (
                 <tr key={m.model}>
-                  <td><b>{m.model}</b><br /><span className="text-[12px] text-text-3">judged by {m.judge}</span></td>
-                  {SIDES.map((s) => <td key={s} className="min-w-[140px]"><Bar side={s} pct={m.pct[s]} /></td>)}
+                  <td><b>{m.model}</b><br /><span className="text-[12px] text-text-3">judged by {m.judge}{m.rejudged ? ` · ${m.rejudged} re-judged` : ""}</span></td>
+                  {SIDES.map((s) => <td key={s} className="min-w-[160px]"><Bar side={s} pct={m.pct[s]} sd={m.sd[s]} /></td>)}
                   <td className="num text-right text-[12.5px]">
                     <span style={{ color: COLOR.realigned }}>{m.wins.realigned}</span> · <span style={{ color: COLOR.control }}>{m.wins.control}</span> · <span style={{ color: COLOR.baseline }}>{m.wins.baseline}</span>{m.wins.tie ? ` · ${m.wins.tie} tie` : ""}
                   </td>
-                  <td className="num text-right">{m.complete}/{m.runs}<br /><span className="text-[11.5px] text-text-4">{m.comparableRuns} comparable</span></td>
+                  <td className="num text-right">{m.complete}/{m.runs}<br /><span className="text-[11.5px] text-text-4">{m.comparableRuns} comparable · n={m.n.min === m.n.max ? m.n.min : `${m.n.min}–${m.n.max}`} per preset</span></td>
                   <td className="num text-right text-[12.5px]">{Math.round((m.tokens.in + m.tokens.out) / Math.max(1, m.runs) / 100) / 10}k / run</td>
                   <td className="num text-right text-[12.5px]">{SIDES.map((s) => (m.secs[s] === null ? "–" : `${m.secs[s]}s`)).join(" · ")}</td>
                 </tr>
@@ -116,6 +117,11 @@ export default function HarnessPage() {
           </table>
         </div>
         <p className="mt-3 text-[12.5px] text-text-4">Judge’s pick counts UpaSārathi · honesty control · baseline. Answer time is per side (baseline · control · UpaSārathi), including a follow-up turn where the preset has one.</p>
+        <p className="mt-1.5 max-w-[110ch] text-[12.5px] text-text-4">
+          No model is judged by itself or by its own family: the two gpt-oss models are judged by Qwen, and Qwen by gpt-oss-120b.
+          {bench.models.some((m) => m.rejudged) && ` ${bench.models.reduce((n, m) => n + m.rejudged, 0)} gpt-oss-20b runs first judged by gpt-oss-120b were re-scored by Qwen on the same recorded answers; each run file keeps the earlier verdict.`}{" "}
+          The target is {bench.samples} samples per preset and model; n is how many are recorded so far, and ± is the standard deviation of the per-run score (blank below two runs). A cell with n=1 is a single sample.
+        </p>
 
         <h3 className="mt-14 text-[20px] font-semibold">Every preset, every model, every sample</h3>
         <p className="mt-1 text-[13.5px] text-text-3">Click a sample to replay it: the three answers type out, the checks stamp, the judge scores.</p>
@@ -131,7 +137,7 @@ export default function HarnessPage() {
                 {p.cells.map((c) => (
                   <div key={c.model}>
                     <div className="flex items-center justify-between gap-2 text-[12.5px]">
-                      <b>{c.model}</b>
+                      <b>{c.model} <span className="font-normal text-text-4">n={c.n}</span></b>
                       <span className="flex gap-1">
                         {c.runs.map((r) => (
                           <Link key={r.id} href={`/harness/run/${r.id}`} className="cite !text-[11.5px]" title={`Replay sample ${r.sample}`}>
@@ -247,7 +253,7 @@ export default function HarnessPage() {
             <h2 className="display band-title mt-3">Your runs, in the full view.</h2>
             <p className="mt-4 max-w-[46ch] text-[15.5px] leading-relaxed text-text-2">The harness writes a <code>.json</code> next to every HTML report. Drop it here to see it with the evidence graph, the verses and the scorecard, exactly like the recorded runs.</p>
           </div>
-          <RunFileLoader axes={rubric.axes} corpusSize={facts.mantras.total + facts.shanti} />
+          <RunFileLoader axes={rubric.axes} corpusSize={facts.mantras.total} />
         </div>
       </section>
 
@@ -257,12 +263,12 @@ export default function HarnessPage() {
         <h2 className="display band-title mt-3">Test your own prompt in the browser.</h2>
         <p className="mt-4 max-w-[70ch] text-[15.5px] text-text-2">The same pipeline runs here, with the key you connect (kept in this browser, relayed per request, never stored).</p>
         <div className="mt-8">
-          <LiveHarness presets={rubric.presets} axes={rubric.axes} corpusSize={facts.mantras.total + facts.shanti} />
+          <LiveHarness presets={rubric.presets} axes={rubric.axes} corpusSize={facts.mantras.total} />
         </div>
       </section>
 
       {/* ── limits ── */}
-      <section className="gutter grid gap-10 border-t border-line py-20 lg:grid-cols-2">
+      <section className="gutter fab-clear grid gap-10 border-t border-line pt-20 lg:grid-cols-2">
         <div>
           <h2 className="display text-[30px]">What this does not show</h2>
           <ul className="mt-4 space-y-3 text-[15px] leading-relaxed text-text-2">

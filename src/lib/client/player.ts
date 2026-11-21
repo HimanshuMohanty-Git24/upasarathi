@@ -1,6 +1,8 @@
 "use client";
 // One audio player for the whole site: a single mantra, a queue (a chapter, a whole Upanishad mantra by mantra), or
 // a whole-text recording; with speed and a loop for chanting practice. The <audio> element lives in <PlayerBar>.
+// Only one thing speaks at a time: the player, the narrator and the AI chant each claim the speaker, and claiming it
+// stops whoever held it.
 import { useSyncExternalStore } from "react";
 
 export interface Track {
@@ -10,6 +12,8 @@ export interface Track {
   /** Offsets inside a whole-text recording, if this track is one segment of it. */
   start?: number;
   end?: number;
+  /** A synthesized chant (Vāgdhenu), never a human recording: the player badges it. */
+  ai?: boolean;
 }
 export interface PlayerState {
   queue: Track[];
@@ -20,10 +24,27 @@ export interface PlayerState {
   title: string;
   error: string | null;
 }
+
+// ── the speaker: one owner at a time ──────────────────────────────────────────────────────────────
+let holder: { owner: string; stop: () => void } | null = null;
+/** Take the speaker; whoever held it is told to stop. */
+export function claimAudio(owner: string, stop: () => void) {
+  if (holder && holder.owner !== owner) {
+    const h = holder;
+    holder = null;
+    h.stop();
+  }
+  holder = { owner, stop };
+}
+export function releaseAudio(owner: string) {
+  if (holder?.owner === owner) holder = null;
+}
+
 let state: PlayerState = { queue: [], index: 0, playing: false, rate: 1, loop: false, title: "", error: null };
 const listeners = new Set<() => void>();
 const set = (patch: Partial<PlayerState>) => {
   state = { ...state, ...patch };
+  if (patch.playing) claimAudio("player", () => set({ playing: false }));
   listeners.forEach((l) => l());
 };
 export const usePlayer = () =>
@@ -58,5 +79,8 @@ export const player = {
   setRate: (rate: PlayerState["rate"]) => set({ rate }),
   toggleLoop: () => set({ loop: !state.loop }),
   fail: (error: string) => set({ error, playing: false }),
-  close: () => set({ queue: [], index: 0, playing: false, title: "", error: null }),
+  close: () => {
+    releaseAudio("player");
+    set({ queue: [], index: 0, playing: false, title: "", error: null });
+  },
 };

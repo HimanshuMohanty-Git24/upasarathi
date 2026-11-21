@@ -28,6 +28,16 @@
         "$2"
       ],
       "text": 3
+    },
+    "supplement": {
+      "ocr": "hume-excerpts",
+      "translator": "R. E. Hume",
+      "source": "The Thirteen Principal Upanishads (1921)",
+      "map": {
+        "3.9": {
+          "from": "KauU 3.9"
+        }
+      }
     }
   },
   "aliases": [
@@ -35,8 +45,5 @@
     "Kaushitaki Brahmana Upanishad",
     "Kauṣītaki Brāhmaṇa Upaniṣad",
     "कौषीतकि"
-  ],
-  "untranslated": [
-    "3.9"
   ]
 }

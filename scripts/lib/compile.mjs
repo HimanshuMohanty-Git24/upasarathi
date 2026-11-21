@@ -10,6 +10,7 @@
 //   graph.json            nodes and curated links (structural links are rebuilt on load: see expandGraph)
 //   layout.json           precomputed positions for the cosmos and the map
 //   lemmas.json           every analysed word's lemma → gloss and passages (loaded when a word is clicked)
+import { withWordOverlay } from "./word-overlay.mjs";
 import { readFile, readdir, access } from "node:fs/promises";
 import { join } from "node:path";
 import { normDeva, foldIast, dice, hash } from "../../src/lib/core/text.ts";
@@ -55,7 +56,7 @@ export async function compile(ROOT) {
     const meta = await readJson(join(dir, "meta.json"));
     metas[meta.id] = meta;
     if (!(await exists(join(dir, "verses.json")))) { err(`${meta.id}: verses.json missing (run npm run data:sources)`); continue; }
-    const vs = (await readJson(join(dir, "verses.json"))).map((v) => ({ ...v, up: meta.id, ...(takeaways[v.id] ? { takeaway: takeaways[v.id] } : {}) }));
+    const vs = (await withWordOverlay(dir, await readJson(join(dir, "verses.json")))).map((v) => ({ ...v, up: meta.id, ...(takeaways[v.id] ? { takeaway: takeaways[v.id] } : {}) }));
     const bh = (await exists(join(dir, "bhashya.json"))) ? await readJson(join(dir, "bhashya.json")) : {};
     bhashya[meta.id] = bh;
     const root = meta.en.replace(/ Upanishad$/, "");
@@ -196,6 +197,12 @@ export async function compile(ROOT) {
           if (target !== vid && verseById.has(target)) { shankara.set(`${vid}|${target}`, { s: vid, t: target, why: `Śaṅkara, commenting on ${labelOf(vid)}, cites ${m[0].trim()}.` }); break; }
         }
       }
+      // A reference with no title, "(I. iv. 7)", points into the same Upanishad (Mādhavānanda, Gambhīrānanda).
+      const abbrev = vid.split("_")[0];
+      for (const m of b.text.matchAll(/\((?:Ibid\.?,?\s*)?([IVX]{1,4})\.\s?([ivx]{1,5})\.\s?(\d{1,3})\)/g)) {
+        const target = `${abbrev}_${roman(m[1])}.${roman(m[2])}.${m[3]}`;
+        if (target !== vid && verseById.has(target)) shankara.set(`${vid}|${target}`, { s: vid, t: target, why: `Śaṅkara, commenting on ${labelOf(vid)}, refers back to ${labelOf(target)}.` });
+      }
     }
     void up;
   }
@@ -251,6 +258,8 @@ export async function compile(ROOT) {
     ...paths.flatMap((p) => p.steps.map((s) => (s.kw !== undefined ? { verse: s.node, kw: s.kw } : { verse: s.node }))).filter((x) => verseById.has(x.verse) || /^[A-Z][a-zA-Z]*_\d/.test(x.verse)),
     // identical and parallel passages are checked by their wording below; echoes need a keyword or an anchor
     ...crossrefs.filter((x) => x.kind === "echo").flatMap((x) => [{ verse: x.a, kw: x.kwA }, { verse: x.b, kw: x.kwB }].map((y) => (y.kw === undefined ? { verse: y.verse } : y))).filter((x) => !extCorpora[x.verse.split("_")[0]]),
+    // a Saṃhitā root the Upanishad only quotes in part ("echo") must name the quoted words
+    ...roots.mantraRoots.filter((r) => r.kind === "echo").map((r) => (r.kw !== undefined ? { verse: r.up, kw: r.kw } : { verse: r.up })),
   ];
   let anchorChecks = 0;
   for (const x of curated) {
@@ -385,8 +394,16 @@ export async function compile(ROOT) {
   };
   for (const t of texts) {
     outputs[`verses/${t.id}.json`] = JSON.stringify(verseLite.filter((v) => v.up === t.id));
-    outputs[`corpus/${t.id}.json`] = JSON.stringify(verses.filter((v) => v.up === t.id));
-    outputs[`bhashya/${t.id}.json`] = JSON.stringify(bhashya[t.id] || {});
+    // Full passages and Śaṅkara's commentary are split by chapter (the first number of the ref; "0" is the śānti),
+    // so opening one passage never downloads a whole Bṛhadāraṇyaka (1.5 MB) or its commentary.
+    const chapterOf = (ref) => ref.split(".")[0];
+    const own = verses.filter((v) => v.up === t.id);
+    for (const ch of [...new Set(own.map((v) => chapterOf(v.ref)))]) {
+      const vs = own.filter((v) => chapterOf(v.ref) === ch);
+      outputs[`corpus/${t.id}/${ch}.json`] = JSON.stringify(vs);
+      const bh = Object.fromEntries(Object.entries(bhashya[t.id] || {}).filter(([vid]) => vs.some((v) => v.id === vid)));
+      outputs[`bhashya/${t.id}/${ch}.json`] = JSON.stringify(bh);
+    }
   }
   return { outputs, errors, warnings, facts, crossChecks, kb: { ...index, verses: verseLite }, graph };
 }

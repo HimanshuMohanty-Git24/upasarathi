@@ -1,10 +1,13 @@
 "use client";
 // The one <audio> element of the site. Plays a single mantra, a queue (continuous chapter or whole-text play, mantra
 // by mantra), or a whole-text recording; with 0.75 / 1 / 1.25 speed and a loop for chanting practice. Hidden when
-// nothing is queued.
+// nothing is queued. A saved AI chant (Vāgdhenu) plays here too, always under its badge. While speech made on this
+// device is active (narration, or an AI chant being made), the speech dock takes this place.
 import { useEffect, useRef, useState } from "react";
 import { player, usePlayer } from "@/lib/client/player";
 import { IconClose, IconLoop, IconNext, IconPause, IconPlay, IconPrev } from "@/components/ui/Icons";
+import { TtsBar, useTtsActive } from "@/components/tts/TtsBar";
+import { AiBadge } from "@/components/tts/TtsBits";
 
 const fmt = (s: number) => (Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}` : "–:––");
 
@@ -13,6 +16,7 @@ export function PlayerBar() {
   const ref = useRef<HTMLAudioElement>(null);
   const [t, setT] = useState({ pos: 0, dur: 0 });
   const track = st.queue[st.index] ?? null;
+  const tts = useTtsActive();
 
   // Load the current track (a segment of a whole recording seeks to its start).
   useEffect(() => {
@@ -48,11 +52,19 @@ export function PlayerBar() {
     } else player.next();
   };
 
-  if (!track) return <audio ref={ref} preload="none" hidden />;
+  if (!track)
+    return (
+      <>
+        <audio ref={ref} preload="none" hidden />
+        {tts && <TtsBar />}
+      </>
+    );
   const pct = t.dur > 0 ? Math.min(100, (t.pos / t.dur) * 100) : 0;
   return (
-    <div className="player capture-hide" role="region" aria-label="Audio player">
-      <audio ref={ref} preload="metadata" onTimeUpdate={onTime} onEnded={onEnded} onError={() => player.fail("Recording unavailable")} hidden />
+    <>
+    {tts && <TtsBar />}
+    <div className="player capture-hide" role="region" aria-label="Audio player" style={tts ? { display: "none" } : undefined}>
+      <audio ref={ref} preload="metadata" onTimeUpdate={onTime} onEnded={onEnded} onError={() => player.fail(track.ai ? "Saved chant unavailable" : "Recording unavailable")} hidden />
       {st.queue.length > 1 && (
         <button className="btn btn-ghost btn-icon !h-9 !w-9" onClick={player.prev} disabled={st.index === 0} aria-label="Previous mantra"><IconPrev size={15} /></button>
       )}
@@ -70,6 +82,7 @@ export function PlayerBar() {
           </p>
           <span className="num shrink-0 text-[11.5px] text-text-3">{st.error ?? `${fmt(t.pos)} / ${fmt(t.dur)}`}</span>
         </div>
+        {track.ai && <div className="mt-1"><AiBadge /></div>}
         <div
           className="bar mt-1.5"
           role="slider"
@@ -99,10 +112,11 @@ export function PlayerBar() {
           <button key={r} aria-pressed={st.rate === r} onClick={() => player.setRate(r)} className="!h-7 !px-2 !text-[12px]">{r}×</button>
         ))}
       </div>
-      <button className={`btn btn-icon !h-9 !w-9 ${st.loop ? "btn-accent" : "btn-ghost"}`} onClick={player.toggleLoop} aria-pressed={st.loop} aria-label="Loop this mantra" title="Loop this mantra (chanting practice)">
+      <button className={`btn btn-icon !h-9 !w-9 ${st.loop ? "btn-accent" : "btn-ghost"}`} onClick={player.toggleLoop} aria-pressed={st.loop} aria-label="Loop this mantra" title={track.ai ? "Loop this AI chant" : "Loop this mantra (chanting practice)"}>
         <IconLoop size={15} />
       </button>
       <button className="btn btn-ghost btn-icon !h-9 !w-9" onClick={player.close} aria-label="Close player"><IconClose size={15} /></button>
     </div>
+    </>
   );
 }

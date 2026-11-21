@@ -48,7 +48,7 @@ export function AskPanel({ onShowInGraph, inExplore = false }: { onShowInGraph: 
               <Mark size={34} />
               <div>
                 <p className="display text-[22px]">Ask the Upanishads</p>
-                <p className="text-[13px] text-text-3">Answers drawn from 316 mantras, with every citation checked.</p>
+                <p className="text-[13px] text-text-3">Answers drawn from the 13 Principal Upanishads, with every citation checked.</p>
               </div>
             </div>
             <p className="mt-4 text-[14px] leading-relaxed text-text-2">

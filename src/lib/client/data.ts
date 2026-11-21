@@ -57,8 +57,10 @@ export const loadGraph = () => (graphPromise ||= fetchData<CompactGraph>("graph.
 export const loadLayout = () => fetchData<Record<string, [number, number, number]>>("layout.json");
 export const loadLemmas = () => fetchData<Record<string, [string, string[]]>>("lemmas.json");
 export const loadVerses = (up: string) => fetchData<VerseLite[]>(`verses/${up}.json`);
-export const loadVerse = async (id: string, up: string): Promise<Verse | undefined> => (await fetchData<Verse[]>(`corpus/${up}.json`)).find((v) => v.id === id);
-export const loadBhashya = async (id: string, up: string): Promise<Bhashya | undefined> => (await fetchData<Record<string, Bhashya>>(`bhashya/${up}.json`))[id];
+/** Passages and commentary are stored per chapter: the first number of the ref ("KaU_1.2.2" → 1; śānti → 0). */
+const chapterOf = (id: string) => id.slice(id.indexOf("_") + 1).split(".")[0];
+export const loadVerse = async (id: string, up: string): Promise<Verse | undefined> => (await fetchData<Verse[]>(`corpus/${up}/${chapterOf(id)}.json`)).find((v) => v.id === id);
+export const loadBhashya = async (id: string, up: string): Promise<Bhashya | undefined> => (await fetchData<Record<string, Bhashya>>(`bhashya/${up}/${chapterOf(id)}.json`))[id];
 /** Which Upanishad a passage id belongs to, from the index (no passage file needed). */
 export async function upOf(id: string): Promise<string | null> {
   const ix = await loadIndex();

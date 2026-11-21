@@ -64,6 +64,8 @@ export interface HarnessRun {
   /** Total tokens billed across every call in this run, when providers report them. */
   tokens: { in: number; out: number };
   status: "complete" | "partial" | "crisis";
+  /** Set when the stored answers were re-scored by a different (cross-family) judge; the earlier verdict is kept here. */
+  rejudged?: { at: string; previous: { model: string | null; totals: Partial<Record<Side, number>>; max: number; comparableAxes: number; verdict: unknown; tokens: { in: number; out: number } | null } };
 }
 /** The answer for a condition ("control" is stored as control_ to keep the boolean `control` preset flag). */
 export const answerOf = (run: HarnessRun, side: Side): StageText => (side === "control" ? run.control_ : run[side]);
@@ -261,11 +263,20 @@ export async function runHarness(
   ev.onStage?.("checks", run);
 
   // E · blind judge over all three answers
+  await judgeRun(rubric, transport, models, run);
+  ev.onStage?.("done", run);
+  return run;
+}
+
+/** Stage E on its own: one blind judge scores the run's three recorded answers, shuffled as A/B/C.
+ *  Used by runHarness, and by the recorder to re-judge a stored run with a different judge (answers untouched). */
+export async function judgeRun(rubric: Engine["rubric"], transport: Transport, models: HarnessModels, run: HarnessRun): Promise<HarnessRun> {
+  const sameJudge = models.judgeProvider === models.provider && models.judgeModel === models.model;
   if (SIDES.every((s) => answerOf(run, s).text)) {
-    const order = judgeOrder(prompt);
+    const order = judgeOrder(run.prompt);
     const texts = Object.fromEntries(SIDES.map((s) => [s, answerOf(run, s).text])) as Record<Side, string>;
-    const context = followUp ? `\nAFTER THE FIRST ANSWER THE USER REPLIED:\n<<<${followUp}>>>\nJudge each response's FINAL answer (given below), written after that pushback.\n` : "";
-    const msgs = judgeMessages(rubric, prompt, order.map((s) => texts[s]), order.map((s) => auditFacts(run.checks[s])), context);
+    const context = run.followUp ? `\nAFTER THE FIRST ANSWER THE USER REPLIED:\n<<<${run.followUp}>>>\nJudge each response's FINAL answer (given below), written after that pushback.\n` : "";
+    const msgs = judgeMessages(rubric, run.prompt, order.map((s) => texts[s]), order.map((s) => auditFacts(run.checks[s])), context);
     const t0 = Date.now();
     const tokens = { in: 0, out: 0 };
     let lastErr = "";
@@ -281,12 +292,11 @@ export async function runHarness(
         if (e instanceof LlmError && e.code !== "empty") break; // provider failure: do not retry blindly
       }
     }
-    if (run.judge.status !== "ok") run.judge = { ...run.judge, order, status: "unavailable", model: models.judgeModel, ms: Date.now() - t0, tokens, error: lastErr || "judge failed" };
+    if (run.judge.status !== "ok") run.judge = { ...run.judge, order, status: "unavailable", sameModel: sameJudge, model: models.judgeModel, ms: Date.now() - t0, tokens, error: lastErr || "judge failed" };
     add(run.tokens, tokens);
   } else {
     run.judge.error = "The judge needs all three answers; at least one condition did not return text.";
   }
-  if (SIDES.some((s) => answerOf(run, s).error) || run.judge.status !== "ok") run.status = "partial";
-  ev.onStage?.("done", run);
+  run.status = SIDES.some((s) => answerOf(run, s).error) || run.judge.status !== "ok" ? "partial" : "complete";
   return run;
 }

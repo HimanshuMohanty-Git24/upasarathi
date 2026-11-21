@@ -19,7 +19,10 @@ for (const sub of ["corpus", "bhashya", "verses"]) {
   await mkdir(join(OUT, sub), { recursive: true });
 }
 await rm(join(OUT, "kb.json"), { force: true }); // replaced by index.json + verses/<id>.json
-for (const [file, body] of Object.entries(outputs)) await writeFile(join(OUT, file), body, "utf8");
+for (const [file, body] of Object.entries(outputs)) {
+  await mkdir(dirname(join(OUT, file)), { recursive: true });
+  await writeFile(join(OUT, file), body, "utf8");
+}
 await mkdir(join(OUT, "runs"), { recursive: true });
 
 console.log(`Integrity gate passed: 0 errors · ${facts.anchors} anchor and keyword checks · ${crossChecks.length} wording checks`);

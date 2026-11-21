@@ -169,7 +169,7 @@
     17.74
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 2
  },
  {
@@ -336,7 +336,7 @@
     36.37
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 3
  },
  {
@@ -461,7 +461,7 @@
     49.67
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 4
  },
  {
@@ -826,7 +826,7 @@
     114.99
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 5
  },
  {
@@ -999,7 +999,7 @@
     140.12
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 6
  },
  {
@@ -1166,7 +1166,7 @@
     154.88
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 7
  },
  {
@@ -1309,7 +1309,7 @@
     169.51
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 8
  },
  {
@@ -1590,7 +1590,7 @@
     209.09
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 9
  },
  {
@@ -1811,7 +1811,7 @@
     241.15
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 10
  },
  {
@@ -1918,7 +1918,7 @@
     250.84
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 11
  },
  {
@@ -2043,7 +2043,7 @@
     263.33
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 12
  },
  {
@@ -2222,7 +2222,7 @@
     285.39
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 13
  },
  {
@@ -2520,7 +2520,7 @@
     318.7
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 15
  },
  {
@@ -3241,7 +3241,7 @@
     393.22
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 20
  },
  {
@@ -3743,7 +3743,7 @@
     458.06
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 22
  },
  {
@@ -3892,7 +3892,7 @@
     475.62
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 23
  },
  {
@@ -4071,7 +4071,7 @@
     496.3
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 24
  },
  {
@@ -4292,7 +4292,7 @@
     521.42
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 25
  },
  {
@@ -4447,7 +4447,7 @@
     538.5
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 26
  },
  {
@@ -4907,7 +4907,7 @@
     595.19
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 28
  },
  {
@@ -5265,7 +5265,7 @@
     640.02
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 30
  },
  {
@@ -5480,7 +5480,7 @@
     664.12
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 31
  },
  {
@@ -5689,7 +5689,7 @@
     697.16
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 32
  },
  {
@@ -6138,7 +6138,7 @@
     756.17
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 33
  },
  {
@@ -6269,7 +6269,7 @@
     773.86
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 34
  }
 ]

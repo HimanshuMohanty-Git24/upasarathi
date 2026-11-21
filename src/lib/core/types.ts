@@ -88,6 +88,8 @@ export interface Translation {
   cite?: string;
   /** Set when the translator rendered several mantras together, e.g. "6.1.2–3". */
   joint?: string;
+  /** Read from an archive.org scan (OCR, cleaned), e.g. Hume's Maitrī. */
+  ocr?: boolean;
 }
 export interface Verse {
   id: string;
@@ -109,12 +111,19 @@ export interface Verse {
   takeaway?: string;
 }
 export interface Bhashya {
+  /** "Śaṅkara", or "Śaṅkara (attributed)" where the authorship is disputed (Śvetāśvatara). */
   author: string;
   lang: string;
   translator: string;
   edition: string;
   text: string;
   source: string;
+  /** Read from an archive.org scan (OCR, cleaned): may carry scanning errors. */
+  ocr?: boolean;
+  /** One commentary covering several mantras ("6.8.1–3"). */
+  joint?: string;
+  note?: string;
+  verifiedBy?: string;
 }
 
 export interface Concept {

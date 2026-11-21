@@ -380,3 +380,19 @@ html[data-capture="1"] *, html[data-capture="1"] *::before, html[data-capture="1
 .ask-hero input { border: 0; background: transparent; padding: 10px 6px; font-size: 17px; }
 .ask-hero input:focus { border: 0; }
 }
+
+/* ── layout guards (unlayered, so they win over utilities) ─────────────────────────────────────── */
+/* Anchors land below the sticky navigation bar at every breakpoint (it is 104px tall on phones). */
+[id] { scroll-margin-top: calc(var(--nav-h) + 24px); }
+/* Room under the last content so the floating "Ask the Upanishads" pill never covers it. */
+.fab-clear { padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)) !important; }
+footer { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+/* The pill folds to a round button while the reader scrolls down. */
+.ask-fab { overflow: hidden; max-width: 340px; transition: transform 160ms, box-shadow 160ms, max-width 220ms ease, padding 220ms ease; }
+.ask-fab.is-compact { max-width: 50px; padding: 0 13px; gap: 0; }
+.ask-fab.is-compact > :not(svg) { opacity: 0; width: 0; overflow: hidden; }
+/* On phones the pill is always the round button: a label there would sit on top of the content. */
+@media (max-width: 639px) {
+  .ask-fab { max-width: 50px; padding: 0 13px; gap: 0; }
+  .ask-fab > :not(svg) { opacity: 0; width: 0; overflow: hidden; }
+}

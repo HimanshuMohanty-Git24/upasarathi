@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit && tsc -p tests",
     "test": "node --test tests/*.test.ts",
     "data:sources": "node scripts/ingest.mjs",
+    "data:words": "node scripts/ingest-words.mjs",
     "data": "node scripts/build.mjs",
     "data:verify": "node scripts/verify.mjs",
     "runs:record": "node scripts/record-runs.mjs",

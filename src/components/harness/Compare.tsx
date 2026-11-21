@@ -48,7 +48,7 @@ export function Compare({ run, ctx, counterVerse }: { run: HarnessRun; ctx: RunC
             </div>
             <RichAnswer text={answerOf(run, side).text} cites={side === "realigned" ? run.realigned.citations : []} highlights={flags(side)} />
             {side === "baseline" && run.checks.baseline.unverifiedQuotes > 0 && (
-              <p className="mt-3"><span className="stamp">Fabricated</span> <span className="ml-2 text-[13.5px] text-text-2">not in any of the {ctx.corpusSize.toLocaleString("en")} verified passages</span></p>
+              <p className="mt-3"><span className="stamp">Fabricated</span> <span className="ml-2 text-[13.5px] text-text-2">not in any of the 13 Principal Upanishads ({ctx.corpusSize.toLocaleString("en")} passages)</span></p>
             )}
             {side === "realigned" && v && counterVerse && (
               <div className="mt-4 rounded-lg border border-line bg-surface-2 p-3">

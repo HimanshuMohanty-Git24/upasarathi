@@ -29,12 +29,22 @@
     "bhashya": {
       "book": "chandogya-upanishad-shankara-bhashya",
       "translator": "Ganganatha Jha",
-      "edition": "1942"
+      "edition": "1942",
+      "walk": {
+        "mode": "khanda"
+      }
     },
-    "shanti": "Āpyāyantu"
+    "shanti": "Āpyāyantu",
+    "supplement": {
+      "ocr": "hume-excerpts",
+      "translator": "R. E. Hume",
+      "source": "The Thirteen Principal Upanishads (1921)",
+      "map": {
+        "3.13.8": {
+          "from": "ChU 3.13.8"
+        }
+      }
+    }
   },
-  "expect": 629,
-  "untranslated": [
-    "3.13.8"
-  ]
+  "expect": 629
 }

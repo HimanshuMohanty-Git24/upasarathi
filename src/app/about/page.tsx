@@ -24,7 +24,7 @@ const RECENSION: Record<string, string> = {
   chandogya: "Kauthuma text, eight prapāṭhakas.",
   taittiriya: "Three vallīs: Śikṣā, Brahmānanda, Bhṛgu.",
   mandukya: "Twelve mantras; Gauḍapāda’s Kārikā is not included.",
-  shvetashvatara: "Six adhyāyas; not commented on by Śaṅkara in an edition available to us (the bhāṣya ascribed to him is of disputed authorship).",
+  shvetashvatara: "Six adhyāyas. The bhāṣya given here is traditionally attributed to Śaṅkara; many scholars hold it to be by a later Advaitin, and every passage says so.",
   maitri: "Also called the Maitrāyaṇīya. Lineage follows its Maitrāyaṇī school; the Muktikā list places it in the Sāmaveda.",
 };
 
@@ -57,9 +57,9 @@ export default function AboutPage() {
       <Ready />
       <div className="max-w-[880px]">
         <p className="eyebrow">About</p>
-        <h1 className="display mt-3 text-[clamp(38px,4.6vw,64px)] leading-[1.04]">Modern AI is trained to please you. The Upanishads were written to wake you up.</h1>
+        <h1 className="display mt-3 text-[clamp(38px,4.6vw,64px)] leading-[1.04]">Four Vedas. Thirteen Principal Upanishads. One essence.</h1>
         <p className="mt-5 text-[17px] leading-relaxed text-text-2">
-          UpaSārathi sets the thirteen Principal Upanishads beside each other as a knowledge graph, roots each in its Veda, and uses them to test AI answers: does an answer serve the person, or please them? It is a reflective and research tool, not a religious authority or personal advice. Everything that is an editorial reading (a takeaway, a concept link, a situation a verse speaks to) is labelled as editorial.
+          UpaSārathi sets the thirteen Principal Upanishads beside each other as a knowledge graph and roots each in its Veda: every passage in Devanagari, IAST and English, with the chant, Śaṅkara’s commentary and a word-by-word reading. A lab built on the same graph uses the texts to test AI answers: does an answer serve the person, or please them? It is a reflective and research tool, not a religious authority or personal advice. Everything that is an editorial reading (a takeaway, a concept link, a situation a verse speaks to) is labelled as editorial.
         </p>
         <nav className="mt-8 flex flex-wrap gap-2 text-[13.5px]" aria-label="On this page">
           {[["sources", "Sources"], ["coverage", "Coverage and gaps"], ["veda-sara", "Veda-Sāra"], ["graph", "The graph"], ["method", "3-way method"], ["glossary", "Glossary"], ["privacy", "Privacy"]].map(([id, l]) => (
@@ -90,13 +90,16 @@ export default function AboutPage() {
           </div>
         ))}
       </section>
-      <p className="mt-3 text-[12px] text-text-4">Corpus hash {facts.corpusHash}: every recorded AI run states the hash it was made against, and the build re-checks them.</p>
+      <p className="mt-3 text-[12px] text-text-4">Corpus hash {facts.corpusHash}: every recorded AI run states the hash it was made against, and the build re-checks them. Runs recorded before the translations and commentary were completed carry an earlier hash; the passages they quote are unchanged, and every one of their checks still re-derives against today’s corpus.</p>
 
       {/* ── sources ── */}
       <section id="sources" className="mt-20 scroll-mt-24">
         <h2 className="display text-[32px]">Sources and translators</h2>
         <p className="mt-3 max-w-[80ch] text-[15px] leading-relaxed text-text-2">
-          Devanagari, IAST, word-by-word analysis and the chant come from <a className="underline" href="https://upanishads.org.in/" target="_blank" rel="noreferrer">upanishads.org.in</a> (except where noted). English translations are in the tradition of Śaṅkara, from the Advaita Ashrama and Sri Ramakrishna Math editions as published there; a second reading by Sri Aurobindo appears where available. Śaṅkara’s commentary (bhāṣya) is quoted from the English translations at <a className="underline" href="https://www.wisdomlib.org/" target="_blank" rel="noreferrer">Wisdom Library</a>, with the edition named on every passage.
+          Devanagari, IAST, word-by-word analysis and the chant come from <a className="underline" href="https://upanishads.org.in/" target="_blank" rel="noreferrer">upanishads.org.in</a> (except where noted). English translations are in the tradition of Śaṅkara, from the Advaita Ashrama and Sri Ramakrishna Math editions as published there; a second reading by Sri Aurobindo appears where available. Śaṅkara’s commentary (bhāṣya) is quoted from the English translations at <a className="underline" href="https://www.wisdomlib.org/" target="_blank" rel="noreferrer">Wisdom Library</a> (Ganganatha Jha’s Chāndogya, Swami Mādhavānanda’s Bṛhadāraṇyaka, and the shorter texts), with the edition named on every passage.
+        </p>
+        <p className="mt-3 max-w-[80ch] text-[15px] leading-relaxed text-text-2">
+          Some texts exist only in print. Swami Gambhīrānanda’s translations of the commentary on the Taittirīya and Aitareya (<i>Eight Upaniṣads</i>) and on the Śvetāśvatara, and R. E. Hume’s 1921 translation of the later Maitrī, are read from scans of the printed books at <a className="underline" href="https://archive.org/" target="_blank" rel="noreferrer">archive.org</a> and cleaned automatically; these passages are marked “from a scan”, and scanning errors remain, mostly in transliterated Sanskrit words. Word-by-word analysis comes from upanishads.org.in where it has it, then from the gold annotation of Oliver Hellwig’s <a className="underline" href="https://github.com/OliverHellwig/sanskrit" target="_blank" rel="noreferrer">Digital Corpus of Sanskrit</a>, and for the Maitrī and most of the Kauṣītaki from an automatic analysis (the Dharmamitra segmenter and the vidyut dictionary), which each passage labels as automatic.
         </p>
         <div className="mt-6 overflow-x-auto">
           <table className="bench-table w-full min-w-[900px] text-[13.5px]">
@@ -116,10 +119,10 @@ export default function AboutPage() {
                 <tr key={r.t.id}>
                   <td><Link href={`/u/${r.t.id}`} className="font-semibold hover:text-accent">{r.t.iast}</Link><br /><span className="text-[12px] text-text-3">{r.total} passages{r.shanti ? " incl. śānti" : ""}</span></td>
                   <td className="max-w-[280px] text-[12.5px] text-text-2">{SRC[r.t.id]?.sa ?? "upanishads.org.in"}{RECENSION[r.t.id] && <span className="block text-text-3">{RECENSION[r.t.id]}</span>}</td>
-                  <td className="text-[12.5px] text-text-2">{r.t.translators.join(", ")}{r.t.translation === "partial" && <span className="block text-text-3">English for prapāṭhakas 1–4 only</span>}</td>
+                  <td className="text-[12.5px] text-text-2">{r.t.translators.join(", ")}{r.t.translation === "partial" && <span className="block text-text-3">English in part</span>}</td>
                   <td className="num text-right">{r.translated}/{r.total}</td>
                   <td className="num text-right">{r.audio}/{r.total}</td>
-                  <td className="num text-right">{r.bhashya || "–"}</td>
+                  <td className="num text-right">{r.bhashya || "–"}{r.t.bhashya && <span className="block text-[11.5px] font-normal text-text-3">{r.t.bhashya.translator}</span>}</td>
                   <td className="num text-right">{r.words || "–"}</td>
                 </tr>
               ))}
@@ -137,17 +140,18 @@ export default function AboutPage() {
             <b className="text-text">No chant recording:</b> {noAudio.map((r) => r.t.iast).join(", ")}{noAudio.some((r) => r.shanti) ? " (the śānti invocation only, where one exists)" : ""}. <b className="text-text">Partial:</b>{" "}
             {partialAudio.map((r) => `${r.t.iast} ${r.audio}/${r.total}`).join(" · ")}. Whole-text recordings, where they exist, play from each text’s page (“Play Full Upanishad”); they are long, uncompressed files.
           </li>
-          <li><b className="text-text">No Śaṅkara commentary on this site:</b> {noBhashya.map((r) => r.t.iast).join(", ")}. For the Chāndogya and Bṛhadāraṇyaka it is given on anchor passages only; their full bhāṣya is book-length.</li>
+          <li><b className="text-text">No Śaṅkara commentary:</b> {noBhashya.map((r) => r.t.iast).join(" and ")}, on which Śaṅkara wrote none. Elsewhere the commentary is given passage by passage; where he comments on several mantras at once each of them says so, and the few he passes over (repeated formulas such as BU 3.7.4–22, and the lineage lists) have none: {rows.filter((r) => r.bhashya > 0 && r.bhashya < r.total - (r.shanti ? 1 : 0)).map((r) => `${r.t.iast} ${r.bhashya}/${r.total - (r.shanti ? 1 : 0)}`).join(" · ")}.</li>
           <li>
             <b className="text-text">Sanskrit and IAST only, no English yet:</b>{" "}
             {untranslated.map((r) => `${r.t.iast} ${r.untranslated.length > 6 ? `${r.untranslated.length} passages` : r.untranslated.join(", ")}`).join(" · ")}.
           </li>
-          <li><b className="text-text">The Maitrī</b> follows Wikisource’s numbering; the English (Krishna Warrier) is given per chapter for prapāṭhakas 1–4, so a passage there shows its chapter’s translation, labelled as such.</li>
+          <li><b className="text-text">The Maitrī</b> follows Wikisource’s numbering. Its English for prapāṭhakas 1–4 (Krishna Warrier) is given per chapter, so a passage there shows its chapter’s translation, labelled as such; prapāṭhakas 5–7 are translated section by section from R. E. Hume (1921), read from a scan.</li>
           <li><b className="text-text">The Kauṣītaki</b> follows the Wikisource recension; its English (Krishna Warrier) is per passage where the edition aligns.</li>
-          <li><b className="text-text">Word-by-word analysis</b> covers {facts.analysedVerses.toLocaleString()} passages: none yet for the Kauṣītaki or Maitrī, part of the Śvetāśvatara, Chāndogya and Bṛhadāraṇyaka. The lemma index finds a word only among analysed passages; the {facts.stems} key-word stems cover every passage.</li>
+          <li><b className="text-text">Word-by-word analysis</b> covers {facts.analysedVerses.toLocaleString()} passages, every one of the thirteen texts. The automatic analysis of the Maitrī and most of the Kauṣītaki is good but not perfect: it was measured at 0.96 precision for words and 0.88 for dictionary forms on a held-out text, and an occasional compound is split wrongly.</li>
+          <li><b className="text-text">Chant:</b> passages with no human recording offer an optional <i>AI chant</i> made in your browser by the Vāgdhenu model (a one-time download of about 321 MB, kept in the browser). It is always labelled “AI Chant · Vāgdhenu (classical meter, no Vedic svaras)” and never replaces a recording. English translations and commentary can also be read aloud, by the Kokoro voice (about 92 MB, once) or instantly by your browser’s own voice.</li>
           <li><b className="text-text">Joint translations:</b> some translators render two or three mantras together; each such passage says so (“translated together as …”).</li>
           <li><b className="text-text">Takeaways</b> (the “in plain English” boxes) are editorial, written for {facts.anchors > 0 ? "key passages" : "a few passages"}, and never stand in for the translation.</li>
-          <li><b className="text-text">Saṃhitā links</b> go to VedAnvaya{VEDANVAYA_URL ? "" : ", whose address is not set in this deployment, so they show as plain references"}; Gītā links go to <a className="underline" href={GITAVISWA_URL} target="_blank" rel="noreferrer">GitaViśva</a>.</li>
+          <li><b className="text-text">Saṃhitā links</b> go to {VEDANVAYA_URL ? <a className="underline" href={VEDANVAYA_URL} target="_blank" rel="noreferrer">VedAnvaya</a> : "VedAnvaya, switched off in this deployment, so they show as plain references"}; Gītā links go to <a className="underline" href={GITAVISWA_URL} target="_blank" rel="noreferrer">GitaViśva</a>. Each Saṃhitā parallel is checked word for word against the VedAnvaya text when the site is built.</li>
         </ul>
       </section>
 

@@ -180,7 +180,7 @@
     40.92
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 2
  },
  {
@@ -336,7 +336,7 @@
     61.03
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 3
  },
  {
@@ -486,7 +486,7 @@
     80.33
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 4
  },
  {
@@ -515,7 +515,7 @@
     101.88
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 5
  },
  {
@@ -544,7 +544,7 @@
     125.14
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 6
  },
  {
@@ -573,7 +573,7 @@
     145.69
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 7
  },
  {
@@ -602,7 +602,7 @@
     165.43
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 8
  },
  {
@@ -631,7 +631,7 @@
     187.43
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 9
  },
  {
@@ -660,7 +660,7 @@
     208.67
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 10
  },
  {
@@ -689,7 +689,7 @@
     231.23
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 11
  },
  {
@@ -718,7 +718,7 @@
     253.8
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 12
  },
  {
@@ -747,7 +747,7 @@
     274.98
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 13
  },
  {
@@ -776,7 +776,7 @@
     295.47
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 14
  },
  {
@@ -805,7 +805,7 @@
     311.94
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 15
  },
  {
@@ -829,7 +829,7 @@
    "joint": "1.15–16"
   },
   "audio": null,
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 16
  },
  {
@@ -859,7 +859,7 @@
     351.47
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 17
  },
  {
@@ -888,7 +888,7 @@
     373.53
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 18
  },
  {
@@ -917,7 +917,7 @@
     386.1
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 19
  },
  {
@@ -946,7 +946,7 @@
     402.88
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 20
  },
  {
@@ -975,7 +975,7 @@
     424.19
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 21
  },
  {
@@ -1004,7 +1004,7 @@
     444.55
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 22
  },
  {
@@ -1033,7 +1033,7 @@
     460.71
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 23
  },
  {
@@ -1062,7 +1062,7 @@
     473.34
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 24
  },
  {
@@ -1091,7 +1091,7 @@
     494.39
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 25
  },
  {
@@ -1120,7 +1120,7 @@
     518.97
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 26
  },
  {
@@ -1149,7 +1149,7 @@
     540.47
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 27
  },
  {
@@ -1178,7 +1178,7 @@
     561.96
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 28
  },
  {
@@ -1236,7 +1236,7 @@
     601.31
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 30
  },
  {
@@ -1265,7 +1265,7 @@
     621.98
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 31
  },
  {
@@ -1317,7 +1317,7 @@
    "source": "108 Upanishads (comp. R. Sheppard)"
   },
   "audio": null,
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 33
  },
  {
@@ -1346,7 +1346,7 @@
     680.75
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 34
  },
  {
@@ -1375,7 +1375,7 @@
     706.46
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 35
  },
  {
@@ -1404,7 +1404,7 @@
     729.34
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 36
  },
  {
@@ -1433,7 +1433,7 @@
     748.82
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 37
  },
  {
@@ -1583,7 +1583,7 @@
     767.42
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 38
  },
  {
@@ -1612,7 +1612,7 @@
     784.9
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 39
  },
  {
@@ -1641,7 +1641,7 @@
     799.87
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 40
  },
  {
@@ -1670,7 +1670,7 @@
     819.84
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 41
  },
  {
@@ -1814,7 +1814,7 @@
     840.52
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 42
  },
  {
@@ -1988,7 +1988,7 @@
     861.64
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 43
  },
  {
@@ -2017,7 +2017,7 @@
     876.98
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 44
  },
  {
@@ -2137,7 +2137,7 @@
    "source": "108 Upanishads (comp. R. Sheppard)"
   },
   "audio": null,
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 45
  },
  {
@@ -2251,7 +2251,7 @@
     912.24
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 46
  },
  {
@@ -2389,7 +2389,7 @@
     932.1
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 47
  },
  {
@@ -2503,7 +2503,7 @@
     948.12
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 48
  },
  {
@@ -2629,7 +2629,7 @@
     963.33
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 49
  },
  {
@@ -2737,7 +2737,7 @@
    "source": "108 Upanishads (comp. R. Sheppard)"
   },
   "audio": null,
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 50
  },
  {
@@ -2809,7 +2809,7 @@
     998.66
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 51
  },
  {
@@ -2917,7 +2917,7 @@
     1014.31
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 52
  },
  {
@@ -3097,7 +3097,7 @@
     1034.29
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 53
  },
  {
@@ -3229,7 +3229,7 @@
     1054.53
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 54
  },
  {
@@ -3379,7 +3379,7 @@
     1076.47
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 55
  },
  {
@@ -3415,7 +3415,7 @@
     1102.74
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 56
  },
  {
@@ -3451,7 +3451,7 @@
     1118.2
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 57
  },
  {
@@ -3523,7 +3523,7 @@
     1155.85
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 59
  },
  {
@@ -3680,7 +3680,7 @@
     1177.85
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 60
  },
  {
@@ -3813,7 +3813,7 @@
     1196.14
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 61
  },
  {
@@ -3952,7 +3952,7 @@
     1216
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 62
  },
  {
@@ -3988,7 +3988,7 @@
     1235.61
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 63
  },
  {
@@ -4024,7 +4024,7 @@
     1265.65
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 64
  },
  {
@@ -4151,7 +4151,7 @@
     1280.99
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 65
  },
  {
@@ -4187,7 +4187,7 @@
     1302.92
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 66
  },
  {
@@ -4223,7 +4223,7 @@
     1324.73
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 67
  },
  {
@@ -4350,7 +4350,7 @@
     1343.15
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 68
  },
  {
@@ -4386,7 +4386,7 @@
     1368.23
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 69
  },
  {
@@ -4422,7 +4422,7 @@
     1389.22
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 70
  },
  {
@@ -4458,7 +4458,7 @@
     1412.66
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 71
  },
  {
@@ -4494,7 +4494,7 @@
     1433.34
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 72
  },
  {
@@ -4530,7 +4530,7 @@
     1452.32
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 73
  },
  {
@@ -4566,7 +4566,7 @@
     1465.96
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 74
  },
  {
@@ -4633,7 +4633,7 @@
     1484.13
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 75
  },
  {
@@ -4669,7 +4669,7 @@
     1499.65
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 76
  },
  {
@@ -4705,7 +4705,7 @@
     1522.66
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 77
  },
  {
@@ -4741,7 +4741,7 @@
     1548.24
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 78
  },
  {
@@ -4777,7 +4777,7 @@
     1569.67
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 79
  },
  {
@@ -4813,7 +4813,7 @@
     1589.91
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 80
  },
  {
@@ -4849,7 +4849,7 @@
     1609.33
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 81
  },
  {
@@ -4885,7 +4885,7 @@
     1628.75
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 82
  },
  {
@@ -4921,7 +4921,7 @@
     1647.48
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 83
  },
  {
@@ -4957,7 +4957,7 @@
     1666.15
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 84
  },
  {
@@ -4993,7 +4993,7 @@
     1685.13
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 85
  },
  {
@@ -5029,7 +5029,7 @@
     1700.84
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 86
  },
  {
@@ -5180,7 +5180,7 @@
     1715.99
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 87
  },
  {
@@ -5216,7 +5216,7 @@
     1737.23
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 88
  },
  {
@@ -5252,7 +5252,7 @@
     1758.67
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 89
  },
  {
@@ -5288,7 +5288,7 @@
     1776.2
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 90
  },
  {
@@ -5324,7 +5324,7 @@
     1791.85
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 91
  },
  {
@@ -5360,7 +5360,7 @@
     1817.49
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 92
  },
  {
@@ -5396,7 +5396,7 @@
     1837.67
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 93
  },
  {
@@ -5426,7 +5426,7 @@
    "source": "108 Upanishads (comp. R. Sheppard)"
   },
   "audio": null,
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 94
  },
  {
@@ -5462,7 +5462,7 @@
     1875.7
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 95
  },
  {
@@ -5498,7 +5498,7 @@
     1895.75
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 96
  },
  {
@@ -5534,7 +5534,7 @@
     1915.36
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 97
  },
  {
@@ -5570,7 +5570,7 @@
     1934.71
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 98
  },
  {
@@ -5751,7 +5751,7 @@
     1955.27
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 99
  },
  {
@@ -5787,7 +5787,7 @@
     1974.75
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 100
  },
  {
@@ -5823,7 +5823,7 @@
     1991.47
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 101
  },
  {
@@ -5980,7 +5980,7 @@
     2013.34
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 102
  },
  {
@@ -6137,7 +6137,7 @@
     2035.84
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 103
  },
  {
@@ -6173,7 +6173,7 @@
     2059.04
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 104
  },
  {
@@ -6209,7 +6209,7 @@
     2079.34
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 105
  },
  {
@@ -6245,7 +6245,7 @@
     2099.01
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 106
  },
  {
@@ -6281,7 +6281,7 @@
     2119.31
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 107
  },
  {
@@ -6354,7 +6354,7 @@
     2161.24
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 109
  },
  {
@@ -6385,7 +6385,7 @@
    "joint": "6.18–19"
   },
   "audio": null,
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 110
  },
  {
@@ -6421,7 +6421,7 @@
     2189.89
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 111
  },
  {
@@ -6457,7 +6457,7 @@
     2208.44
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 112
  },
  {
@@ -6493,7 +6493,7 @@
     2225.15
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 113
  },
  {
@@ -6620,7 +6620,7 @@
     2244.64
    ]
   },
-  "hasBhashya": false,
+  "hasBhashya": true,
   "order": 114
  }
 ]

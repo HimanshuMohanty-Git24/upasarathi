@@ -30,7 +30,11 @@
     "bhashya": {
       "book": "the-brihadaranyaka-upanishad",
       "translator": "Swami Madhavananda",
-      "edition": "1934"
+      "edition": "1934",
+      "walk": {
+        "mode": "heading",
+        "from": "doc117893"
+      }
     },
     "shanti": "Pūrṇam adaḥ"
   },
