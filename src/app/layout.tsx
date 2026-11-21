@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Inter, Source_Serif_4, Tiro_Devanagari_Sanskrit } from "next/font/google";
 import { TopNav } from "@/components/layout/TopNav";
 import { Footer } from "@/components/layout/Footer";
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Overlays />
           </DrawerProvider>
         </GlossaryProvider>
+        <Analytics />
       </body>
     </html>
   );
