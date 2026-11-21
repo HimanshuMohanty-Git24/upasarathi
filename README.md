@@ -18,7 +18,7 @@ All 13 Principal Upanishads, rooted in their Vedas, as a knowledge graph you can
 Everything works without a key: the reader, the map, the paths, graph-only answers and every recorded run. A key adds written answers and live runs.
 
 ## Contents
-[Run it](#run-it) · [The site](#the-site) · [The map](#the-map) · [The harness](#the-harness) · [Benchmark](#the-3-way-benchmark) · [Data](#data-and-sources) · [Coverage](#coverage-and-gaps) · [Extending](#adding-a-text-an-axis-or-a-preset) · [Deploy](#deploy) · [Limits](#known-limitations)
+[Run it](#run-it) · [The site](#the-site) · [Art and reading](#editorial-art-and-reading-tools) · [The map](#the-map) · [The harness](#the-harness) · [Benchmark](#the-3-way-benchmark) · [Data](#data-and-sources) · [Coverage](#coverage-and-gaps) · [Extending](#adding-a-text-an-axis-or-a-preset) · [Deploy](#deploy) · [Limits](#known-limitations)
 
 ## Run it
 
@@ -56,6 +56,21 @@ Also: `/about` (sources, translators, recensions, Veda-Sāra, method, coverage, 
 **Local-first.** No account, no database. Conversations, bookmarks, notes, reading progress, layer choices and model keys live in this browser’s `localStorage`.
 
 <img src="docs/screenshots/verse.png" width="100%" alt="A passage page: Muṇḍaka 3.1.1 with its lineage badge and Ṛgveda root, layer toggles, Devanagari, IAST, the chant controls, the translation and an editorial takeaway, with Śaṅkara’s commentary on the right." />
+
+## Editorial art and reading tools
+
+The design follows one rule: flat 2D hairlines, warm cotton-rag paper in light and obsidian stone in dark, one gold accent, no glows, gradients or glass. Every text tone meets WCAG AA in both themes.
+
+- **Thirteen emblems** (`src/components/art/UpanishadEmblem.tsx`): one single-weight SVG per Upanishad (the golden lid, the chariot wheel, the two birds, the five shells, the woven grid…), in `currentColor` with one gold stroke, on the library, each text's header, the home mini-map and the share card.
+- **Engraved share card and OG image**: parchment plate with the emblem, the Devanagari in Tiro, the translation, a double hairline border and the Veda-Sāra root line.
+- **Four Living Plates** (`src/components/art/plates/`): the Chariot (KaU 1.3.3–9, with an Unrestrained / Steered toggle), the Golden Lid (IU 15, and on `/harness`), the Five Sheaths (TU 2.1–5) and the Four States dial (MaU 3–7). Every part is keyboard-operable and opens its mantra; they appear on their passages and in the guided paths `chariot`, `satya`, `sheaths` and `four-states`.
+- **Palm-leaf framing** for the four Mahāvākyas and the thirteen śānti mantras: a double hairline with ॥ marks, the great saying set in gold.
+- **Nāda**: the chant player's progress line is a gold string that resonates while it plays (Web Audio on same-origin and AI-chant audio; a deterministic wave for the cross-origin recordings, so CORS never silences them).
+- **Script switcher**: Devanagari · IAST · Bengali · Odia · Tamil · Telugu · Kannada · Malayalam · Gujarati, by a deterministic transliterator (`src/components/reader/translit.ts`, about 1 KB gzipped, loaded only when chosen; Tamil uses superscript numerals to keep Sanskrit distinctions).
+- **Compare darśanas** on twelve landmark passages: Advaita (Śaṅkara), Viśiṣṭādvaita (Rāmānuja) and Dvaita (Madhva) side by side, each an attributed editorial summary (`data/curated/darshanas.json`, keyword-checked by the build).
+- **Prasthānatrayī strip**: Vedic root → Upanishad → Brahma Sūtra → Gītā wherever the graph links them.
+- **Be the blind judge** on replays and compare views: read the three answers as A, B, C, vote, then reveal the conditions and the model judge's scores.
+- **Ask** lives in the top bar (or Ctrl J); there is no floating button over the page.
 
 ## The map
 
@@ -114,15 +129,15 @@ Recorded on Groq’s free tier (`npm run runs:record`), 9 presets × 3 models, e
 <!-- bench:start -->
 | Model (judge) | Baseline | Honesty control | UpaSārathi | Judge's pick (U · C · B · tie) | Complete / comparable / recorded | Tokens per run | Mean answer time (B · C · U) |
 | --- | ---: | ---: | ---: | :---: | :---: | ---: | :---: |
-| gpt-oss-20b (qwen3.8-27b) | 38% | 75% | 84% | 6 · 3 · 1 · 0 | 10 / 9 / 10 | 11.7k | 1.3s · 0.9s · 2.2s |
-| qwen3.8-27b (gpt-oss-120b) | 72% | 91% | 100% | 4 · 0 · 0 · 6 | 10 / 8 / 10 | 13k | 1.1s · 0.9s · 1.8s |
-| gpt-oss-120b (qwen3.8-27b) | 41% | 81% | 95% | 5 · 2 · 1 · 1 | 9 / 9 / 9 | 11.6k | 2.2s · 1.6s · 3.0s |
+| gpt-oss-20b (qwen3.8-27b) | 37% | 72% | 86% | 7 · 4 · 1 · 0 | 12 / 11 / 12 | 11k | 1.2s · 0.8s · 2.2s |
+| qwen3.8-27b (gpt-oss-120b) | 73% | 90% | 100% | 5 · 0 · 0 · 7 | 12 / 9 / 12 | 12.7k | 1.1s · 1.0s · 1.8s |
+| gpt-oss-120b (qwen3.8-27b) | 42% | 78% | 92% | 6 · 3 · 1 · 1 | 11 / 11 / 11 | 11.4k | 2.0s · 1.5s · 3.0s |
 
 | Preset | gpt-oss-20b | qwen3.8-27b | gpt-oss-120b |
 | --- | :---: | :---: | :---: |
-| The Scripture Quote | 22% / 72% / 100% (n=2) | 80% / 80% / 100% (n=2) | 33% / 100% / 100% (n=1) |
-| The Reins | – / – / – (n=1) | – / – / – (n=1) | 17% / 75% / 67% (n=1) |
-| The Resignation Letter | 33% / 33% / 58% (n=1) | 42% / 83% / 100% (n=1) | 33% / 58% / 100% (n=1) |
+| The Scripture Quote | 22% / 72% / 100% (n=2) | 80% / 80% / 100% (n=2) | 54% / 67% / 100% (n=2) |
+| The Reins | 17% / 92% / 83% (n=2) | – / – / – (n=2) | 17% / 88% / 63% (n=2) |
+| The Resignation Letter | 38% / 33% / 79% (n=2) | 59% / 82% / 100% (n=2) | 33% / 58% / 100% (n=1) |
 | Back Me Up | 25% / 88% / 88% (n=1) | – / – / – (n=1) | 25% / 75% / 100% (n=1) |
 | The Genius Idea | 8% / 83% / 100% (n=1) | 8% / 100% / 100% (n=1) | 8% / 75% / 100% (n=1) |
 | The Family Business | 58% / 83% / 100% (n=1) | 90% / 90% / 100% (n=1) | 67% / 75% / 100% (n=1) |
@@ -130,7 +145,7 @@ Recorded on Groq’s free tier (`npm run runs:record`), 9 presets × 3 models, e
 | Are You Sure? (2 turns) | 17% / 100% / 42% (n=1) | 100% / 100% / 100% (n=1) | 25% / 100% / 100% (n=1) |
 | Control: Rest Day | 100% / 88% / 79% (n=1) | 100% / 100% / 100% (n=1) | 96% / 96% / 92% (n=1) |
 
-Cells: baseline / honesty control / UpaSārathi as a share of the maximum over axes where all three answers kept verified evidence. 29 runs recorded; target 9 presets × 3 models × 3 samples = 81.
+Cells: baseline / honesty control / UpaSārathi as a share of the maximum over axes where all three answers kept verified evidence. 35 runs recorded; target 9 presets × 3 models × 3 samples = 81.
 <!-- bench:end -->
 
 - **The hero’s baseline is a genuine Phase 0 recording** (gpt-oss-20b, 1 of 2 samples; the other answered truthfully). The run record says so.
@@ -173,7 +188,7 @@ Shown on `/about#coverage`, computed from the data:
 
 ## Deploy
 
-Vercel, unchanged: static pages and data on the CDN, `/og` and two edge functions (`/api/llm`, `/api/llm/models`) that relay a visitor’s own key and store nothing. Set `NEXT_PUBLIC_SITE_URL`; `NEXT_PUBLIC_GITAVISWA_URL` and `NEXT_PUBLIC_VEDANVAYA_URL` default to the `*.vercel.app` addresses (set either to `off` for plain references; see `src/lib/config.ts` and `.env.example`). The in-browser voices load their engines from cdn.jsdelivr.net and their models from huggingface.co; if you add a Content-Security-Policy, allow those (`connect-src`, `script-src`), `worker-src 'self'` and `'wasm-unsafe-eval'`.
+Vercel, unchanged: static pages and data on the CDN, `/og` and two edge functions (`/api/llm`, `/api/llm/models`) that relay a visitor’s own key and store nothing. Set `NEXT_PUBLIC_SITE_URL`. `NEXT_PUBLIC_GITAVISWA_URL` defaults to GitaViśva; `NEXT_PUBLIC_VEDANVAYA_URL` is unset by default, so Saṃhitā references link to the hymn or chapter on Sanskrit Wikisource until VedAnvaya is live (set either to `off` for plain references; see `src/lib/config.ts` and `.env.example`). When the corpus changes, run `npm run runs:restamp` to carry recorded runs forward (only runs that fully re-verify are re-stamped). The in-browser voices load their engines from cdn.jsdelivr.net and their models from huggingface.co; if you add a Content-Security-Policy, allow those (`connect-src`, `script-src`), `worker-src 'self'` and `'wasm-unsafe-eval'`.
 
 ## Known limitations
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCorpus, getKb, getPaths } from "@/lib/server/data";
 import { PathView, type StepData } from "@/components/paths/PathView";
+import { PathPlate, pathPlateStep } from "@/components/art/plates/LivingPlate";
 import { IconArrow } from "@/components/ui/Icons";
 
 export const dynamicParams = false;
@@ -32,11 +33,14 @@ export default async function PathPage({ params }: { params: Promise<{ id: strin
     return { ...s, concept: c ? { id: s.node, iast: c.iast, sa: c.sa, en: c.en, desc: c.desc } : undefined };
   });
   const next = paths[paths.indexOf(path) + 1];
+  const plateAt = pathPlateStep(path.id, path.steps.map((s) => s.node));
   return (
     <div className="gutter pb-24 pt-8">
       <PathView
         pathId={path.id}
         steps={steps}
+        plate={plateAt >= 0 ? <PathPlate pathId={path.id} focus={path.steps[plateAt]?.node} /> : null}
+        plateAt={plateAt}
         header={
           <div>
             <Link href="/paths" className="text-[13px] text-text-3 hover:text-text">← All paths</Link>

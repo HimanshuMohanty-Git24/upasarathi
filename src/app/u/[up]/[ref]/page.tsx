@@ -2,7 +2,8 @@ import { Ready } from "@/components/ui/Ready";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getBhashya, getCorpus, getGraph, getIndex, getText } from "@/lib/server/data";
+import { getBhashya, getCorpus, getDarshanas, getGraph, getIndex, getText } from "@/lib/server/data";
+import { Darshanas } from "@/components/verse/Darshanas";
 import { REL_LABEL } from "@/lib/core/graph";
 import type { GEdge } from "@/lib/core/types";
 import { externalUrl, SITE_URL } from "@/lib/config";
@@ -10,9 +11,11 @@ import { AudioButton } from "@/components/verse/AudioButton";
 import { AiChantButton } from "@/components/tts/AiChantButton";
 import { ListenControls } from "@/components/tts/ListenControls";
 import { CiteChip } from "@/components/verse/Drawer";
-import { Lineage } from "@/components/verse/Lineage";
+import { Lineage, TrayiStrip } from "@/components/verse/Lineage";
 import { WordStrip } from "@/components/verse/Words";
 import { PlayQueue, VerseActions, ViewToggles } from "@/components/verse/ReaderTools";
+import { SanskritBlock } from "@/components/reader/SanskritBlock";
+import { LivingPlate } from "@/components/art/plates/LivingPlate";
 import { Gloss } from "@/components/ui/Glossary";
 import { AskOpen } from "@/components/home/HomeClient";
 import { TEXT_HEX } from "@/components/explore/palette";
@@ -28,7 +31,8 @@ export async function generateMetadata({ params }: { params: Promise<{ up: strin
   const t = getText(up);
   const v = getCorpus(up).find((x) => x.ref === ref);
   const title = `${t?.iast} Upaniṣad ${refLabel(ref)}`;
-  const og = `/og?t=${encodeURIComponent(`${t?.abbrev} ${refLabel(ref)}`)}&s=${encodeURIComponent((v?.tr?.text ?? v?.iast.join(" ") ?? "").slice(0, 220))}&d=${encodeURIComponent(v?.sa[0] ?? "")}`;
+  const root = t?.lineage ? [`Rooted in the ${t.lineage.vedaLabel}`, t.lineage.sectionLabel ? `${t.lineage.sectionLabel.split(" ")[0]} section` : null].filter(Boolean).join(" · ") : "";
+  const og = `/og?t=${encodeURIComponent(`${t?.abbrev} ${refLabel(ref)}`)}&s=${encodeURIComponent((v?.tr?.text ?? v?.iast.join(" ") ?? "").slice(0, 220))}&d=${encodeURIComponent(v?.sa[0] ?? "")}&up=${encodeURIComponent(up)}&r=${encodeURIComponent(root)}`;
   return { title, description: v?.tr?.text.slice(0, 160), openGraph: { title, images: [{ url: og, width: 1200, height: 630 }] }, twitter: { card: "summary_large_image", images: [og] } };
 }
 
@@ -51,6 +55,12 @@ export default async function VersePage({ params }: { params: Promise<{ up: stri
   const hue = TEXT_HEX.dark[t.id];
   const nearby = verses.slice(Math.max(0, i - 6), i + 7);
   const roots = of("ROOTED_IN").map((e) => ({ label: label(e.t), kind: e.kind, href: externalUrl(ix.external[e.t]) }));
+  // Prasthānatrayī: Vedic root → this Upanishad → Brahma Sūtra → Gītā, from the graph's own links
+  const trayi = {
+    root: roots.map((r) => ({ label: r.label, href: r.href, external: true })),
+    sutra: of("READ_BY").map((e) => ({ label: label(e.t), href: `/map?node=${encodeURIComponent(e.t)}`, title: e.why })),
+    gita: rel.filter((e) => e.type === "CROSS_REFERENCES" && /^BG_/.test(e.s === v.id ? e.t : e.s)).map((e) => { const g = e.s === v.id ? e.t : e.s; return { label: label(g), href: externalUrl(ix.external[g]), title: e.why, external: true }; }),
+  };
   const chanted = verses.filter((x) => x.audio).map((x) => ({ id: x.id, label: `${t.abbrev} ${refLabel(x.ref)}`, src: x.audio!.mp3 }));
   const fromHere = chanted.findIndex((x) => x.id === v.id);
   const commented = ix.texts.reduce((n, x) => n + (x.commented ?? 0), 0);
@@ -89,12 +99,12 @@ export default async function VersePage({ params }: { params: Promise<{ up: stri
         <div className="flex items-center justify-between gap-3 text-[13px] text-text-3 xl:hidden">
           <Link href={`/u/${up}`} className="hover:text-text">← {t.iast} Upaniṣad · {v.section}</Link>
         </div>
-        <p className="eyebrow mt-4 xl:mt-0" style={{ color: hue }}>{t.iast} Upaniṣad · {v.shanti ? "Śānti mantra (peace invocation)" : v.section}</p>
+        <p className="eyebrow hue-ink mt-4 xl:mt-0" style={{ "--hue-d": hue, "--hue-l": TEXT_HEX.light[t.id] } as React.CSSProperties}>{t.iast} Upaniṣad · {v.shanti ? "Śānti mantra (peace invocation)" : v.section}</p>
         <h1 className="display mt-2 text-[clamp(34px,3.4vw,52px)]">{t.abbrev} {refLabel(v.ref)}</h1>
         <div className="mt-3"><Lineage text={t} compact roots={roots} /></div>
+        <TrayiStrip here={`${t.iast} ${refLabel(v.ref)}`} {...trayi} />
         <div className="mt-5"><ViewToggles /></div>
-        <div className="v-deva deva mt-6 text-[clamp(24px,2.2vw,32px)]">{v.sa.map((l, k) => <div key={k}>{l}</div>)}</div>
-        <div className="v-iast iast mt-4 text-[17px]">{v.iast.map((l, k) => <div key={k}>{l}</div>)}</div>
+        <SanskritBlock v={v} />
         <div className="mt-6 flex flex-wrap gap-2">
           <AudioButton src={v.audio?.mp3} label="Hear the chant" track={{ id: v.id, label: `${t.abbrev} ${refLabel(v.ref)}` }} />
           {!v.audio && <AiChantButton id={v.id} up={up} label={`${t.abbrev} ${refLabel(v.ref)}`} />}
@@ -118,6 +128,7 @@ export default async function VersePage({ params }: { params: Promise<{ up: stri
             Our sources have no English translation for this passage yet. The Sanskrit and IAST above are complete; see <Link href="/about#coverage" className="underline">what is covered</Link>.
           </p>
         )}
+        <LivingPlate verseId={v.id} />
         {v.takeaway && (
           <div className="takeaway mt-6 max-w-[68ch]">
             <p className="eyebrow !text-[10.5px]">In plain English · an editorial takeaway, not a translation</p>
@@ -212,6 +223,8 @@ export default async function VersePage({ params }: { params: Promise<{ up: stri
           </div>
         )}
       </aside>
+      {/* three readings side by side: a full-width row under the reader, so each column keeps a readable measure */}
+      {getDarshanas().passages.some((p) => p.verse === v.id) && <div className="min-w-0 xl:col-span-2 xl:col-start-2"><Darshanas data={getDarshanas()} verse={v.id} /></div>}
     </div>
   );
 }

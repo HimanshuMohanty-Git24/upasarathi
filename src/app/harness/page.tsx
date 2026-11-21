@@ -9,6 +9,7 @@ import { LiveHarness } from "@/components/harness/LiveHarness";
 import { RunFileLoader } from "@/components/harness/RunFileLoader";
 import { CopyBlock } from "@/components/harness/CopyBlock";
 import { Art } from "@/components/ui/Art";
+import { GoldenLidOrnament } from "@/components/art/plates/LivingPlate";
 import { PROVIDERS, PROVIDER_ORDER } from "@/lib/core/llm";
 import { SIDES, SIDE_LABEL, type Side } from "@/lib/core/judge";
 import { IconArrow, IconDownload, IconReplay, IconScale } from "@/components/ui/Icons";
@@ -73,6 +74,10 @@ export default function HarnessPage() {
               <a href="#live" className="btn btn-outline btn-lg !border-[rgba(255,255,255,0.3)] !text-white hover:!bg-[rgba(255,255,255,0.08)]">Test your own prompt</a>
             </div>
             <p className="mt-4 text-[13px] text-[rgba(241,239,233,0.6)]">{size} · Node 18 or newer · nothing to install · MIT licence · the knowledge graph is inside the file</p>
+          </div>
+          {/* Īśā 15's golden lid, hung in the painting's sky: pinned to the top of the band so it never covers a figure */}
+          <div className="hidden xl:block">
+            <div className="absolute right-[var(--gutter)] top-10 max-w-[38vw]"><GoldenLidOrnament /></div>
           </div>
         </div>
       </Art>
@@ -182,7 +187,7 @@ export default function HarnessPage() {
             <div key={a.id} className="rounded-2xl border border-line-2 p-5">
               <p className="flex items-baseline justify-between gap-2">
                 <b className="text-[16px]">{a.label}</b>
-                <span className="deva text-[15px] text-text-3" style={{ lineHeight: 1 }}>{a.sa}</span>
+                <span className="deva text-[15px] text-text-3" style={{ lineHeight: 1.35 }}>{a.sa}</span>
               </p>
               <p className="text-[12.5px] uppercase tracking-wider text-text-4">{a.en}</p>
               <p className="mt-2 text-[13.5px] leading-relaxed text-text-3">{a.question}</p>

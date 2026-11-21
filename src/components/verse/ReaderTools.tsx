@@ -5,7 +5,11 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { personal, usePersonal } from "@/lib/client/personal";
 import { player, usePlayer, type Track } from "@/lib/client/player";
 import { ShareButton } from "@/components/ui/Share";
+import { loadIndex, useAsync } from "@/lib/client/data";
+import { sectionOf } from "@/components/verse/Lineage";
 import { IconBookmark, IconNote, IconPause, IconPlay } from "@/components/ui/Icons";
+import { ScriptPicker } from "@/components/reader/ScriptPicker";
+import { scriptInfo, useScript } from "@/lib/client/script";
 
 export const LAYERS = [
   { id: "deva", label: "Devanagari" },
@@ -30,10 +34,13 @@ export function ViewToggles() {
     () => "",
   );
   const set = hidden.split(" ").filter(Boolean);
+  // The first layer is the Sanskrit in the chosen script; with IAST chosen it is the IAST, and there is no second.
+  const script = useScript();
+  const textLayers = script === "iast" ? ["deva", "tr"] : ["deva", "iast", "tr"];
   const toggle = (id: Layer) => {
     const next = set.includes(id) ? set.filter((x) => x !== id) : [...set, id];
     // Never hide everything that carries the text itself.
-    if (["deva", "iast", "tr"].every((x) => next.includes(x))) return;
+    if (textLayers.every((x) => next.includes(x))) return;
     document.documentElement.dataset.hide = next.join(" ");
     try {
       localStorage.setItem(KEY, next.join(" "));
@@ -41,18 +48,24 @@ export function ViewToggles() {
     listeners.forEach((l) => l());
   };
   return (
-    <div className="view-toggles" role="group" aria-label="Show or hide layers">
-      {LAYERS.map((l) => (
-        <button key={l.id} type="button" aria-pressed={!set.includes(l.id)} onClick={() => toggle(l.id)}>
-          {l.label}
-        </button>
-      ))}
+    <div className="view-toggles sk-controls">
+      <div className="sk-layers" role="group" aria-label="Show or hide layers">
+        {LAYERS.filter((l) => !(script === "iast" && l.id === "iast")).map((l) => (
+          <button key={l.id} type="button" aria-pressed={!set.includes(l.id)} onClick={() => toggle(l.id)}>
+            {l.id === "deva" ? scriptInfo(script).label : l.label}
+          </button>
+        ))}
+      </div>
+      <ScriptPicker />
     </div>
   );
 }
 
 export function VerseActions({ id, up, share }: { id: string; up: string; share: { title: string; subtitle: string; deva: string; iast: string; lines: string[]; url: string } }) {
   const p = usePersonal();
+  const ix = useAsync(loadIndex, []);
+  const text = ix?.texts.find((t) => t.id === up);
+  const root = text?.lineage ? [`Rooted in the ${text.lineage.vedaLabel}`, sectionOf(text)].filter(Boolean).join(" · ") : undefined;
   const marked = p.bookmarks.includes(id);
   const note = p.notes[id]?.text ?? "";
   const [editing, setEditing] = useState(false);
@@ -67,7 +80,7 @@ export function VerseActions({ id, up, share }: { id: string; up: string; share:
       <button type="button" className="btn btn-sm" aria-expanded={editing} onClick={() => setEditing((e) => !e)}>
         <IconNote size={14} /> {note ? "Your note" : "Add a note"}
       </button>
-      <ShareButton label="Share" {...share} />
+      <ShareButton label="Share" {...share} emblem={up} root={root} translation={share.lines[0]} credit={share.lines[1]} />
       {(editing || note) && (
         <div className="w-full">
           {editing ? (

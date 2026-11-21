@@ -55,7 +55,8 @@ function toBlocks(text: string): Block[] {
       flush();
       const rows: string[][] = [];
       while (i < lines.length && /^\s*\|/.test(lines[i])) {
-        if (!/^\s*\|?\s*:?-{2,}/.test(lines[i])) rows.push(lines[i].trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim()));
+        // a model's "<br>" inside a cell is a line break, never shown as markup
+        if (!/^\s*\|?\s*:?-{2,}/.test(lines[i])) rows.push(lines[i].trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim().replace(/\s*<br\s*\/?>\s*/gi, " · ")));
         i++;
       }
       i--;

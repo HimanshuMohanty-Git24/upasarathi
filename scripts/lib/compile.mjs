@@ -39,6 +39,7 @@ export async function compile(ROOT) {
   const extText = (await exists(join(C, "external-text.json"))) ? await readJson(join(C, "external-text.json")) : {};
   const rubric = await readJson(join(C, "rubric.json"));
   const roots = await readJson(join(C, "vedic-roots.json"));
+  const darshanas = await readJson(join(C, "darshanas.json"));
   const { stems } = await readJson(join(C, "stems.json"));
   const { terms: glossary } = await readJson(join(C, "glossary.json"));
   const { verses: takeaways } = await readJson(join(C, "takeaways.json"));
@@ -258,6 +259,8 @@ export async function compile(ROOT) {
     ...paths.flatMap((p) => p.steps.map((s) => (s.kw !== undefined ? { verse: s.node, kw: s.kw } : { verse: s.node }))).filter((x) => verseById.has(x.verse) || /^[A-Z][a-zA-Z]*_\d/.test(x.verse)),
     // identical and parallel passages are checked by their wording below; echoes need a keyword or an anchor
     ...crossrefs.filter((x) => x.kind === "echo").flatMap((x) => [{ verse: x.a, kw: x.kwA }, { verse: x.b, kw: x.kwB }].map((y) => (y.kw === undefined ? { verse: y.verse } : y))).filter((x) => !extCorpora[x.verse.split("_")[0]]),
+    // the Darśana comparisons name their passage by keyword
+    ...darshanas.passages.map((p) => ({ verse: p.verse, kw: p.kw })),
     // a Saṃhitā root the Upanishad only quotes in part ("echo") must name the quoted words
     ...roots.mantraRoots.filter((r) => r.kind === "echo").map((r) => (r.kw !== undefined ? { verse: r.up, kw: r.kw } : { verse: r.up })),
   ];
@@ -391,6 +394,7 @@ export async function compile(ROOT) {
     "rubric.json": JSON.stringify(rubric),
     "paths.json": JSON.stringify({ paths, categories }),
     "facts.json": JSON.stringify(facts, null, 2),
+    "darshanas.json": JSON.stringify(darshanas),
   };
   for (const t of texts) {
     outputs[`verses/${t.id}.json`] = JSON.stringify(verseLite.filter((v) => v.up === t.id));

@@ -81,7 +81,7 @@ export function Term({ id, children }: { id: string; children?: ReactNode }) {
       </button>
       {open && pos && (
         <span role="tooltip" className="gl-pop reveal" style={{ left: pos.x, top: pos.y, transform: pos.up ? "translateY(-100%)" : undefined }}>
-          <b>{t.term}</b> {t.sa && <span className="deva text-[14px] text-text-3" style={{ lineHeight: 1 }}>{t.sa}</span>}
+          <b>{t.term}</b> {t.sa && <span className="deva text-[14px] text-text-3" style={{ lineHeight: 1.35 }}>{t.sa}</span>}
           <span className="mt-1 block">{t.short}</span>
           {t.concept && (
             <Link href={`/map?node=concept:${t.concept}`} className="mt-1.5 inline-block text-[12px] text-accent underline underline-offset-2" onMouseDown={(e) => e.preventDefault()}>

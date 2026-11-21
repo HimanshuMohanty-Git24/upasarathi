@@ -29,6 +29,7 @@ export function getGraph(): GraphData {
 }
 export const getRubric = () => read<Rubric>("rubric.json");
 export const getFacts = () => read<Facts>("facts.json");
+export const getDarshanas = () => read<import("@/components/verse/Darshanas").DarshanaData>("darshanas.json");
 export const getPaths = () => read<{ paths: LearningPath[]; categories: Record<string, string> }>("paths.json").paths;
 /** Chapter files of one Upanishad (corpus/<up>/<chapter>.json), in reading order. */
 const chapterFiles = (dir: string, up: string) =>

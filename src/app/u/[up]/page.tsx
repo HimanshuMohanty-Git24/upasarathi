@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCorpus, getIndex, getText } from "@/lib/server/data";
-import { TEXT_HEX } from "@/components/explore/palette";
+import { emblemMotif, UpanishadEmblem } from "@/components/art/UpanishadEmblem";
 import { AskOpen } from "@/components/home/HomeClient";
-import { Lineage } from "@/components/verse/Lineage";
+import { Lineage, sectionOf } from "@/components/verse/Lineage";
 import { ContinueReading, PlayQueue } from "@/components/verse/ReaderTools";
 import { Gloss } from "@/components/ui/Glossary";
 import { IconChat, IconMap } from "@/components/ui/Icons";
@@ -17,7 +17,8 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ up: string }> }): Promise<Metadata> {
   const { up } = await params;
   const t = getText(up);
-  const og = `/og?t=${encodeURIComponent(`${t?.iast} Upaniṣad`)}&s=${encodeURIComponent(t?.tagline ?? "")}&d=${encodeURIComponent(t?.sa ?? "")}`;
+  const root = t?.lineage ? [`Rooted in the ${t.lineage.vedaLabel}`, sectionOf(t)].filter(Boolean).join(" · ") : "";
+  const og = `/og?t=${encodeURIComponent(`${t?.iast} Upaniṣad`)}&s=${encodeURIComponent(t?.tagline ?? "")}&d=${encodeURIComponent(t?.sa ?? "")}&up=${encodeURIComponent(up)}&r=${encodeURIComponent(root)}`;
   return { title: `${t?.iast ?? ""} Upaniṣad`, description: t?.tagline, openGraph: { images: [{ url: og, width: 1200, height: 630 }] }, twitter: { card: "summary_large_image", images: [og] } };
 }
 
@@ -30,7 +31,6 @@ export default async function TextPage({ params }: { params: Promise<{ up: strin
   if (!t) notFound();
   const verses = getCorpus(up);
   const sections = [...new Set(verses.map((v) => v.section))];
-  const hue = TEXT_HEX.dark[t.id];
   const track = (v: (typeof verses)[number]) => ({ id: v.id, label: `${t.abbrev} ${refLabel(v.ref)}`, src: v.audio!.mp3 });
   const chanted = verses.filter((v) => v.audio).map(track);
   const untranslated = verses.filter((v) => !v.tr).length;
@@ -40,8 +40,8 @@ export default async function TextPage({ params }: { params: Promise<{ up: strin
       <Ready />
       <aside className="lg:sticky lg:top-[calc(var(--nav-h)+28px)] lg:h-fit">
         <Link href="/u" className="text-[13px] text-text-3 hover:text-text">← All thirteen</Link>
-        <div className="mt-6 h-1 w-16 rounded-full" style={{ background: hue, boxShadow: `0 0 18px ${hue}` }} />
-        <p className="deva mt-5 text-[30px]" style={{ lineHeight: 1.35 }}>{t.sa}</p>
+        <UpanishadEmblem id={t.id} size={84} className="-ml-1.5 mt-7 block text-text-2" title={`Emblem of the ${t.iast}: ${emblemMotif(t.id)}`} />
+        <p className="deva mt-4 text-[30px]" style={{ lineHeight: 1.35 }}>{t.sa}</p>
         <h1 className="display text-[44px] leading-[1.05]">{t.iast} Upaniṣad</h1>
         <p className="mt-3 text-[15.5px] leading-relaxed text-text-2"><Gloss>{t.tagline}</Gloss></p>
         <div className="mt-4"><Lineage text={t} /></div>

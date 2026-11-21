@@ -15,7 +15,7 @@ export interface StepData extends PathStep {
 
 const KIND: Record<PathStep["kind"], string> = { read: "Read", contrast: "Contrast", story: "Story", reflect: "Reflect" };
 
-export function PathView({ pathId, steps, header, footer }: { pathId: string; steps: StepData[]; header?: React.ReactNode; footer?: React.ReactNode }) {
+export function PathView({ pathId, steps, header, footer, plate, plateAt = -1 }: { pathId: string; steps: StepData[]; header?: React.ReactNode; footer?: React.ReactNode; /** A Living Plate, shown in step `plateAt`. */ plate?: React.ReactNode; plateAt?: number }) {
   const key = `upasarathi:path:${pathId}`;
   const [done, setDone] = useState<number[]>([]);
   useReady(true);
@@ -89,6 +89,7 @@ export function PathView({ pathId, steps, header, footer }: { pathId: string; st
                   <div className="mt-3"><CiteChip id={s.concept.id} label="Connections" /></div>
                 </div>
               )}
+              {i === plateAt && plate}
               <div className="mt-5 border-l-2 border-line-3 pl-4">
                 <p className="text-[11px] uppercase tracking-[0.08em] text-text-4">Editorial note · not a translation</p>
                 <p className="mt-1 text-[15.5px] leading-relaxed text-text-2"><Gloss max={3}>{s.note}</Gloss></p>

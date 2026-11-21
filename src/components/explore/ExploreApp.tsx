@@ -122,7 +122,7 @@ export function ExploreApp() {
           <p className="eyebrow !text-[10.5px]">The map · Veda → Upanishad → mantra</p>
           <h1 className="display mt-0.5 text-[21px] sm:text-[24px]">{st.view === "focus" && selectedNode ? selectedNode.label : "Four Vedas, thirteen Upanishads"}</h1>
           <p className="mt-1 hidden text-[12.5px] text-text-3 sm:block">
-            {graph ? `${counts.Verse} passages · ${counts.Concept} concepts · ${counts.Story} stories · ${counts.Stem} key words · ${graph.edges.length.toLocaleString()} links` : "Loading…"}
+            {graph ? `${(counts.Verse ?? 0).toLocaleString()} passages · ${counts.Concept} concepts · ${counts.Story} stories · ${counts.Stem} key words · ${graph.edges.length.toLocaleString()} links` : "Loading…"}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <div className="seg !rounded-[10px] !p-[2px]" role="group" aria-label="View">
@@ -160,7 +160,7 @@ export function ExploreApp() {
       {ask.highlight && (
         <div className="absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 sm:top-5 md:block" style={{ marginLeft: -offset / 2 }}>
           <div className="glass reveal flex max-w-[min(560px,46vw)] items-center gap-3 !rounded-full py-1.5 pl-4 pr-1.5">
-            <span className="dot" style={{ background: "var(--gold)", boxShadow: "0 0 10px var(--gold)" }} />
+            <span className="dot" style={{ background: "var(--gold)" }} />
             <p className="min-w-0 truncate text-[13px]">
               <span className="text-text-3">{ask.highlight.nodes.length} nodes behind</span> “{ask.highlight.label}”
             </p>

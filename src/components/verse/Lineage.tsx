@@ -37,3 +37,41 @@ export function Lineage({ text, compact = false, roots = [] }: { text: TextMeta;
     </div>
   );
 }
+
+export interface TrayiStop { label: string; href: string | null; title?: string; external?: boolean }
+/**
+ * The Prasthānatrayī, the three foundations of Vedānta, read through one passage: the Vedic root it takes up, the
+ * Upanishad itself, the Brahma Sūtra that reads it, and the Gītā verse that echoes it. Shown only when at least one
+ * of the other three exists; absent stages are simply left out.
+ */
+export function TrayiStrip({ here, root, sutra, gita }: { here: string; root: TrayiStop[]; sutra: TrayiStop[]; gita: TrayiStop[] }) {
+  if (!root.length && !sutra.length && !gita.length) return null;
+  const stage = (name: string, stops: TrayiStop[]) => (
+    <li className="trayi-stage">
+      <span className="trayi-name">{name}</span>
+      <span className="trayi-refs">
+        {stops.map((s, i) => (
+          <span key={i}>
+            {i > 0 && <span className="text-text-4"> · </span>}
+            {s.href ? (
+              <a href={s.href} title={s.title} className="underline decoration-[var(--line-3)] underline-offset-[3px] hover:decoration-[var(--gold)]" {...(s.external ? { target: "_blank", rel: "noreferrer" } : {})}>{s.label}</a>
+            ) : (
+              <span title={s.title}>{s.label}</span>
+            )}
+          </span>
+        ))}
+      </span>
+    </li>
+  );
+  return (
+    <nav className="trayi" aria-label="Prasthānatrayī: from the Veda to the Gītā">
+      <p className="trayi-title">Prasthānatrayī</p>
+      <ol>
+        {root.length > 0 && stage("Vedic root", root)}
+        {stage("Upanishad", [{ label: here, href: null }])}
+        {sutra.length > 0 && stage("Brahma Sūtra", sutra)}
+        {gita.length > 0 && stage("Bhagavad Gītā", gita)}
+      </ol>
+    </nav>
+  );
+}

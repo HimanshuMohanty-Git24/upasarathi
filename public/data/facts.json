@@ -18,7 +18,7 @@
   "dilemmas": 12,
   "stories": 29,
   "persons": 38,
-  "paths": 6,
+  "paths": 8,
   "axes": 6,
   "presets": 9,
   "nodes": 1998,
@@ -29,8 +29,8 @@
   "stems": 70,
   "lemmas": 4509,
   "glossary": 60,
-  "anchors": 318,
+  "anchors": 342,
   "crossCorpus": 55,
-  "runs": 29,
-  "corpusHash": "4f26f649"
+  "runs": 35,
+  "corpusHash": "3272c9cd"
 }

@@ -10,7 +10,7 @@
  "control": false,
  "sharpened": false,
  "sample": 1,
- "corpusHash": "7fa1deaf",
+ "corpusHash": "3272c9cd",
  "models": {
   "provider": "groq",
   "model": "openai/gpt-oss-120b",
@@ -580,5 +580,9 @@
   "in": 6022,
   "out": 2922
  },
- "status": "complete"
+ "status": "complete",
+ "restamped": {
+  "at": "2026-11-21T10:55:32.309Z",
+  "from": "7fa1deaf"
+ }
 }

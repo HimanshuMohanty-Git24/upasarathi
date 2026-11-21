@@ -39,7 +39,7 @@ export function CosmosPreview() {
 /** The compact Veda → Upanishad map: five roots, thirteen texts. Click to open either in the Map. */
 export function VedaMiniMap({ nodes, edges, height = 460 }: { nodes: GNode[]; edges: GEdge[]; height?: number }) {
   const router = useRouter();
-  return <MiniGraph nodes={nodes} edges={edges} direction="LR" height={height} onPick={(id) => router.push(`/map?node=${encodeURIComponent(id)}&roots=1`)} />;
+  return <MiniGraph nodes={nodes} edges={edges} direction="LR" height={height} emblems onPick={(id) => router.push(`/map?node=${encodeURIComponent(id)}&roots=1`)} />;
 }
 
 export function AskOpen({ children, className = "btn btn-outline btn-lg", question }: { children: React.ReactNode; className?: string; question?: string }) {
@@ -75,7 +75,7 @@ export function HomeAsk({ suggestions }: { suggestions: string[] }) {
       </form>
       <div className="mt-4 flex flex-wrap justify-center gap-2">
         {suggestions.map((s) => (
-          <button key={s} className="chip-q glass !max-w-[420px] !bg-[var(--surface)]" onClick={() => send(s)}>
+          <button key={s} className="chip-q !max-w-[420px] border border-line-2 bg-[var(--surface)]" onClick={() => send(s)}>
             {s}
           </button>
         ))}

@@ -5,7 +5,7 @@ import { getCorpus, getFacts, getIndex, getRubric } from "@/lib/server/data";
 import { getBench } from "@/lib/server/bench";
 import { VEDA_ORDER } from "@/lib/core/layout";
 import { SIDES, SIDE_LABEL } from "@/lib/core/judge";
-import { GITAVISWA_URL, VEDANVAYA_URL } from "@/lib/config";
+import { GITAVISWA_URL, SAMHITA_LINKS, VEDANVAYA_URL } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "About · sources, method and coverage",
@@ -62,7 +62,7 @@ export default function AboutPage() {
           UpaSārathi sets the thirteen Principal Upanishads beside each other as a knowledge graph and roots each in its Veda: every passage in Devanagari, IAST and English, with the chant, Śaṅkara’s commentary and a word-by-word reading. A lab built on the same graph uses the texts to test AI answers: does an answer serve the person, or please them? It is a reflective and research tool, not a religious authority or personal advice. Everything that is an editorial reading (a takeaway, a concept link, a situation a verse speaks to) is labelled as editorial.
         </p>
         <nav className="mt-8 flex flex-wrap gap-2 text-[13.5px]" aria-label="On this page">
-          {[["sources", "Sources"], ["coverage", "Coverage and gaps"], ["veda-sara", "Veda-Sāra"], ["graph", "The graph"], ["method", "3-way method"], ["glossary", "Glossary"], ["privacy", "Privacy"]].map(([id, l]) => (
+          {[["sources", "Sources"], ["coverage", "Coverage and gaps"], ["veda-sara", "Veda-Sāra"], ["graph", "The graph"], ["method", "3-way method"], ["glossary", "Glossary"], ["privacy", "Privacy"], ["credits", "Credits"]].map(([id, l]) => (
             <a key={id} href={`#${id}`} className="chip">{l}</a>
           ))}
         </nav>
@@ -90,7 +90,7 @@ export default function AboutPage() {
           </div>
         ))}
       </section>
-      <p className="mt-3 text-[12px] text-text-4">Corpus hash {facts.corpusHash}: every recorded AI run states the hash it was made against, and the build re-checks them. Runs recorded before the translations and commentary were completed carry an earlier hash; the passages they quote are unchanged, and every one of their checks still re-derives against today’s corpus.</p>
+      <p className="mt-3 text-[12px] text-text-4">Corpus hash {facts.corpusHash}: every recorded AI run states the hash it was made against, and the build re-checks them. When the corpus grows, runs recorded against an earlier version are re-verified against today’s and carried forward only if every check still passes; each keeps the fingerprint it was first recorded against.</p>
 
       {/* ── sources ── */}
       <section id="sources" className="mt-20 scroll-mt-24">
@@ -151,7 +151,7 @@ export default function AboutPage() {
           <li><b className="text-text">Chant:</b> passages with no human recording offer an optional <i>AI chant</i> made in your browser by the Vāgdhenu model (a one-time download of about 321 MB, kept in the browser). It is always labelled “AI Chant · Vāgdhenu (classical meter, no Vedic svaras)” and never replaces a recording. English translations and commentary can also be read aloud, by the Kokoro voice (about 92 MB, once) or instantly by your browser’s own voice.</li>
           <li><b className="text-text">Joint translations:</b> some translators render two or three mantras together; each such passage says so (“translated together as …”).</li>
           <li><b className="text-text">Takeaways</b> (the “in plain English” boxes) are editorial, written for {facts.anchors > 0 ? "key passages" : "a few passages"}, and never stand in for the translation.</li>
-          <li><b className="text-text">Saṃhitā links</b> go to {VEDANVAYA_URL ? <a className="underline" href={VEDANVAYA_URL} target="_blank" rel="noreferrer">VedAnvaya</a> : "VedAnvaya, switched off in this deployment, so they show as plain references"}; Gītā links go to <a className="underline" href={GITAVISWA_URL} target="_blank" rel="noreferrer">GitaViśva</a>. Each Saṃhitā parallel is checked word for word against the VedAnvaya text when the site is built.</li>
+          <li><b className="text-text">Saṃhitā links</b> go to {SAMHITA_LINKS === "vedanvaya" ? <a className="underline" href={VEDANVAYA_URL} target="_blank" rel="noreferrer">VedAnvaya</a> : SAMHITA_LINKS === "wikisource" ? <>the hymn or chapter on <a className="underline" href="https://sa.wikisource.org/" target="_blank" rel="noreferrer">Sanskrit Wikisource</a></> : "nowhere in this deployment (they show as plain references)"}; Gītā links go to <a className="underline" href={GITAVISWA_URL} target="_blank" rel="noreferrer">GitaViśva</a>. Each Saṃhitā parallel is checked word for word against the VedAnvaya text when the site is built.</li>
         </ul>
       </section>
 
@@ -191,8 +191,8 @@ export default function AboutPage() {
       {/* ── method ── */}
       <section id="method" className="mt-20 scroll-mt-24">
         <h2 className="display text-[32px]">The 3-way method</h2>
-        <div className="mt-4 grid max-w-[1100px] gap-6 lg:grid-cols-2">
-          <ol className="list-decimal space-y-3 pl-5 text-[14.5px] leading-relaxed text-text-2">
+        <div className="mt-4 grid max-w-[1100px] grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
+          <ol className="list-decimal min-w-0 space-y-3 pl-5 text-[14.5px] leading-relaxed text-text-2 [overflow-wrap:anywhere]">
             <li><b className="text-text">Baseline:</b> the model with “{rubric.baselineSystem}”.</li>
             <li><b className="text-text">Honesty control:</b> the same model with a strong honesty prompt and no scripture. The build fails if this prompt mentions any scripture term.</li>
             <li><b className="text-text">UpaSārathi:</b> the same model given an evidence packet from the graph (chosen by code, not by a model) and the Sārathi prompt; citations outside the packet are removed and one repair pass is allowed.</li>
@@ -200,8 +200,8 @@ export default function AboutPage() {
             <li><b className="text-text">Blind judge:</b> the three answers as A, B, C in an order fixed by the prompt’s hash; scores on {rubric.axes.length} axes (0–4) are kept only when they quote their answer verbatim; totals use only the axes where all three kept verified evidence.</li>
             <li><b className="text-text">Multi-turn pushback:</b> one preset follows the first answer with “{rubric.presets.find((p) => p.followUp)?.followUp}”; the judge reads the final answer.</li>
           </ol>
-          <div>
-            <table className="bench-table w-full text-[13.5px]">
+          <div className="min-w-0 overflow-x-auto">
+            <table className="bench-table w-full min-w-[420px] text-[13.5px]">
               <thead>
                 <tr><th className="text-left">Model</th>{SIDES.map((s) => <th key={s} className="text-right">{SIDE_LABEL[s]}</th>)}<th className="text-right">Runs</th></tr>
               </thead>
@@ -236,6 +236,32 @@ export default function AboutPage() {
         <p className="mt-3 text-[15px] leading-relaxed text-text-2">
           There is no account and no database. Your conversations, bookmarks, notes, reading progress and model keys are kept in this browser’s storage only. A key is sent per request to the provider you chose, through a relay that does not log or store it. Clearing site data removes everything.
         </p>
+      </section>
+
+      {/* ── credits ── */}
+      <section id="credits" className="mt-20 max-w-[880px]">
+        <h2 className="display text-[32px]">With gratitude</h2>
+        <p className="mt-3 text-[15px] leading-relaxed text-text-2">
+          This site stands on the work of translators, editors, publishers and scholars. Their texts are quoted with attribution on every passage, for study and without commercial use. If you value them, buy their books.
+        </p>
+        <dl className="credits mt-8 grid gap-x-10 gap-y-6 text-[14.5px] leading-relaxed sm:grid-cols-2">
+          {[
+            ["Advaita Ashrama, Kolkata", "https://advaitaashrama.org/", "Swami Gambhīrānanda’s Eight Upaniṣads and Śvetāśvatara with Śaṅkara’s commentary; Swami Mādhavānanda’s Bṛhadāraṇyaka with Śaṅkara’s commentary."],
+            ["Sri Ramakrishna Math, Chennai", "https://chennaimath.org/", "Swami Swahananda’s Chāndogya and Swami Tyāgīśānanda’s Śvetāśvatara, the translations in the tradition of Śaṅkara."],
+            ["Wisdom Library", "https://www.wisdomlib.org/", "Ganganatha Jha’s Chāndogya with Śaṅkara’s commentary, Mādhavānanda’s Bṛhadāraṇyaka and the shorter bhāṣyas, carefully kept online."],
+            ["upanishads.org.in", "https://upanishads.org.in/", "The Devanagari and IAST text, Sri Aurobindo’s renderings, the word-by-word analysis and the chant recordings."],
+            ["Internet Archive", "https://archive.org/", "Scans of the printed editions, from which the Taittirīya, Aitareya and Śvetāśvatara commentaries and R. E. Hume’s 1921 Thirteen Principal Upanishads are read."],
+            ["Digital Corpus of Sanskrit", "https://github.com/OliverHellwig/sanskrit", "Oliver Hellwig’s gold-standard morphological annotation, behind most of the word-by-word lookup."],
+            ["Dharmamitra and vidyut", "https://dharmamitra.org/", "The Sanskrit segmenter and the vidyut dictionary (Ambuda) behind the automatic analysis of the Maitrī and Kauṣītaki."],
+            ["Sanskrit Wikisource and GRETIL", "https://sa.wikisource.org/", "The Kauṣītaki and Maitrī texts, and the Saṃhitā texts that the Veda-Sāra parallels are checked against (through VedAnvaya)."],
+            ["Vāgdhenu and Kokoro", "https://huggingface.co/gnumanth/sanskrit-tts-onnx", "The open speech models that chant and read aloud in your browser: Vāgdhenu (Sanskrit) and Kokoro 82M (English)."],
+          ].map(([name, href, what]) => (
+            <div key={name} className="border-t border-line pt-4">
+              <dt className="font-semibold"><a href={href} target="_blank" rel="noreferrer" className="underline decoration-[var(--line-3)] underline-offset-4 hover:decoration-[var(--gold)]">{name}</a></dt>
+              <dd className="mt-1 text-text-2">{what}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
     </div>
   );

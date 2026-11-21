@@ -13,7 +13,7 @@ export function Footer() {
           <div className="flex items-center gap-2.5 text-text">
             <Mark size={26} />
             <span className="text-[16px] font-semibold">UpaSārathi</span>
-            <span className="deva text-[15px] text-text-3" style={{ lineHeight: 1 }}>उपसारथि</span>
+            <span className="deva text-[15px] text-text-3" style={{ lineHeight: 1.35 }}>उपसारथि</span>
           </div>
           <p className="mt-3 max-w-[42ch] leading-relaxed">
             <i>Upa</i>, near; <i>sārathi</i>, the charioteer. A reflective and research tool built on the Principal Upanishads, not a source of religious authority or personal advice. Editorial links are labelled as editorial.

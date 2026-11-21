@@ -20,7 +20,8 @@
     "harness:build": "node scripts/build-harness.mjs",
     "harness": "node harness/cli.ts",
     "runs:rederive": "node scripts/rederive-checks.mjs",
-    "runs:table": "node scripts/bench-table.mjs"
+    "runs:table": "node scripts/bench-table.mjs",
+    "runs:restamp": "node scripts/restamp-runs.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.12.0",

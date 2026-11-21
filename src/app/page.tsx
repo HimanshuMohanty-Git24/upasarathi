@@ -7,7 +7,7 @@ import { AskOpen, HomeAsk, HomeReady, VedaMiniMap } from "@/components/home/Home
 import { AudioButton } from "@/components/verse/AudioButton";
 import { CiteChip } from "@/components/verse/Drawer";
 import { SUGGESTIONS } from "@/components/ask/suggestions";
-import { TEXT_HEX } from "@/components/explore/palette";
+import { UpanishadEmblem } from "@/components/art/UpanishadEmblem";
 import { IconArrow, IconBook, IconChat, IconMap, IconOrbit, IconRoute, IconScale } from "@/components/ui/Icons";
 
 // The front door is the Upanishads themselves: the Vedas they distil, the texts, the ways in. The Alignment Harness
@@ -81,7 +81,7 @@ export default function Home() {
                 [`${facts.vedaSaraLinks} Veda-Sāra links`, "into the Saṃhitās, the Gītā and the Brahma Sūtra, each checked against the text"],
               ].map(([t, d]) => (
                 <li key={t} className="flex gap-3">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--gold)] shadow-[0_0_10px_var(--gold)]" />
+                  <span className="mt-[11px] h-px w-4 shrink-0 bg-[var(--gold)]" aria-hidden />
                   <span><b className="font-semibold">{t}</b><span className="block text-text-3">{d}</span></span>
                 </li>
               ))}
@@ -92,7 +92,7 @@ export default function Home() {
             </div>
           </div>
           <div className="card overflow-hidden p-2">
-            <VedaMiniMap nodes={vedaNodes} edges={vedaEdges} height={520} />
+            <VedaMiniMap nodes={vedaNodes} edges={vedaEdges} height={660} />
           </div>
         </div>
       </section>
@@ -161,7 +161,7 @@ export default function Home() {
         <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {ix.texts.map((t) => (
             <Link key={t.id} href={`/u/${t.id}`} className="tile group flex items-start gap-5 p-6">
-              <span className="mt-2 h-3 w-3 shrink-0 rounded-full" style={{ background: TEXT_HEX.dark[t.id], boxShadow: `0 0 14px ${TEXT_HEX.dark[t.id]}` }} />
+              <UpanishadEmblem id={t.id} size={52} className="-my-1 -ml-1 shrink-0 text-text-2 transition-colors group-hover:text-text" />
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline justify-between gap-3">
                   <span className="display text-[24px]">{t.iast}</span>
@@ -177,8 +177,8 @@ export default function Home() {
 
       {/* ── 6 · Ask ──────────────────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-t border-line py-[clamp(72px,11vh,130px)]">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(127,196,168,0.12),transparent)]" />
         <div className="gutter relative mx-auto max-w-[1100px] text-center">
+          <span className="mx-auto mb-5 block h-px w-10 bg-[var(--gold)]" aria-hidden />
           <p className="eyebrow">Chat with the graph</p>
           <h2 className="display band-title mt-3">Ask the Upanishads.</h2>
           <p className="mx-auto mt-4 max-w-[62ch] text-[16.5px] leading-relaxed text-text-2">

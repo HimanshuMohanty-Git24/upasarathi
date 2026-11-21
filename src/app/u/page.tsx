@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getFacts, getIndex } from "@/lib/server/data";
 import { VEDA_ORDER } from "@/lib/core/layout";
 import { Art } from "@/components/ui/Art";
-import { TEXT_HEX } from "@/components/explore/palette";
+import { UpanishadEmblem } from "@/components/art/UpanishadEmblem";
 
 export const metadata: Metadata = { title: "Read the 13 Principal Upanishads", description: "All thirteen Principal Upanishads, grouped by the Veda each one distils: Devanagari, IAST, translation, chant and Śaṅkara’s commentary." };
 
@@ -20,7 +20,7 @@ export default function TextsPage() {
           <p className="eyebrow !text-[rgba(241,239,233,0.62)]">Read</p>
           <h1 className="display mt-3 text-[clamp(40px,5vw,76px)] leading-[1.02]">The 13 Principal Upanishads</h1>
           <p className="mt-4 max-w-[64ch] text-[17px] leading-relaxed text-[rgba(241,239,233,0.85)]">
-            {facts.mantras.total.toLocaleString()} passages and {facts.shanti} peace invocations, every one in Devanagari and IAST, {facts.translatedVerses.toLocaleString()} with an English translation, {facts.audioVerses} chanted, and Śaṅkara&apos;s commentary on {facts.bhashyaVerses}. Grouped by the Veda each one distils.
+            {facts.mantras.total.toLocaleString()} passages and {facts.shanti} peace invocations, every one in Devanagari and IAST, {facts.translatedVerses.toLocaleString()} with an English translation, {facts.audioVerses} chanted, and Śaṅkara&apos;s commentary on {facts.bhashyaVerses.toLocaleString()}. Grouped by the Veda each one distils.
           </p>
         </div>
       </Art>
@@ -34,8 +34,8 @@ export default function TextsPage() {
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {texts.map((t) => (
                 <Link key={t.id} href={`/u/${t.id}`} className="tile group flex min-h-[230px] flex-col p-6">
-                  <span className="flex items-center justify-between gap-3">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: TEXT_HEX.dark[t.id], boxShadow: `0 0 14px ${TEXT_HEX.dark[t.id]}` }} />
+                  <span className="flex items-start justify-between gap-3">
+                    <UpanishadEmblem id={t.id} size={52} className="-ml-1 -mt-1 shrink-0 text-text-2 transition-colors group-hover:text-text" />
                     <span className="text-[12px] text-text-4">{t.count} passages</span>
                   </span>
                   <span className="deva mt-5 text-[22px] text-text-2" style={{ lineHeight: 1.3 }}>{t.sa}</span>

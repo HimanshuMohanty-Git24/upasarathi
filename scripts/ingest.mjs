@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import { normDeva, devaToIast } from "../src/lib/core/text.ts";
 import { commentaryUnits, numberedSections, paragraphs, stripPageFurniture } from "./lib/ocr-book.mjs";
 import { OCR_SOURCES } from "./lib/ocr-sources.mjs";
+import { buildEnglish, buildLexicon, restoreDiacritics } from "./lib/diacritics.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CACHE = join(ROOT, ".cache");
@@ -486,6 +487,24 @@ async function walkBook(book, spec, verses, abbrev) {
 
 // ── main ──────────────────────────────────────────────────────────────────────────────────────────
 const anchors = JSON.parse(await readFile(join(ROOT, "data", "curated", "anchors.json"), "utf8")).anchors;
+
+// Diacritic repair for text read from scans: a lexicon of every IAST word form in the committed corpus (passages and
+// word-by-word forms), and an English vocabulary from the clean, hand-typed Wisdom Library commentaries.
+const repair = await (async () => {
+  const iast = [], english = [];
+  for (const d of (await readdir(CORPUS, { withFileTypes: true })).filter((x) => x.isDirectory())) {
+    const p = (f) => join(CORPUS, d.name, f);
+    if (await exists(p("verses.json"))) for (const v of JSON.parse(await readFile(p("verses.json"), "utf8"))) {
+      iast.push(v.iast.join(" "));
+      for (const w of v.words || []) iast.push([w[1], w[3]].filter(Boolean).join(" "));
+    }
+    if (await exists(p("words.json"))) for (const ws of Object.values(JSON.parse(await readFile(p("words.json"), "utf8")).words || {})) for (const w of ws) iast.push([w[1], w[3]].filter(Boolean).join(" "));
+    if (["chandogya", "brihadaranyaka"].includes(d.name) && (await exists(p("bhashya.json")))) for (const b of Object.values(JSON.parse(await readFile(p("bhashya.json"), "utf8")))) if (!b.ocr) english.push(b.text);
+  }
+  const lex = buildLexicon(iast), en = buildEnglish(english);
+  let fixed = 0;
+  return { fix: (t) => { const r = restoreDiacritics(t, lex, en); fixed += r.fixed; return r.text; }, get fixed() { return fixed; } };
+})();
 const shantiIndex = audioIndexAll.audio?.shanti || [];
 const ONLY = process.argv.includes("--only") ? process.argv[process.argv.indexOf("--only") + 1].split(",") : null; // npm run data:sources -- --only chandogya,brihadaranyaka
 const ids = (await readdir(CORPUS, { withFileTypes: true })).filter((d) => d.isDirectory() && (!ONLY || ONLY.includes(d.name))).map((d) => d.name);
@@ -560,7 +579,7 @@ for (const id of ids) {
         if (v.tr || v.shanti) continue;
         const text = entries[`=${v.ref}`] ?? (ing.supplement.map?.[v.ref] ? null : entries[v.ref]);
         if (!text) continue;
-        v.tr = { text: text.replace(/\n/g, " "), by: ing.supplement.translator, source: `${ing.supplement.source} (archive.org scan)`, ocr: true };
+        v.tr = { text: repair.fix(text.replace(/\n/g, " ")), by: ing.supplement.translator, source: `${ing.supplement.source} (archive.org scan)`, ocr: true };
         n++;
       }
       log(`  ${id}: ${n} passage(s) translated from ${ing.supplement.translator}`);
@@ -596,7 +615,7 @@ for (const id of ids) {
         const v = verses.find((x) => x.ref === ref && !x.shanti);
         if (!v) { log(`  ${id}: scan section ${ref} has no passage`); continue; }
         if (text.length < 120) continue; // a joint commentary given at a neighbouring verse, or a scan gap
-        bhashya[v.id] = { author: ing.bhashya.author || "Śaṅkara", lang: "en", translator: ing.bhashya.translator, edition: ing.bhashya.edition, text, source: got.url, verifiedBy: "text-number", ocr: true, ...(ing.bhashya.note ? { note: ing.bhashya.note } : {}) };
+        bhashya[v.id] = { author: ing.bhashya.author || "Śaṅkara", lang: "en", translator: ing.bhashya.translator, edition: ing.bhashya.edition, text: repair.fix(text), source: got.url, verifiedBy: "text-number", ocr: true, ...(ing.bhashya.note ? { note: ing.bhashya.note } : {}) };
       }
     } catch (e) {
       problems.push(`${id}: commentary scan failed: ${e.message}`);
@@ -666,4 +685,5 @@ if (await exists(yvFiles[0])) {
 await writeFile(join(ROOT, "data", "curated", "external-text.json"), JSON.stringify(external, null, 1), "utf8");
 log(`external texts: ${Object.keys(external).length} (${Object.keys(external).join(", ")})`);
 
+log(`diacritics restored in scanned text: ${repair.fixed} word(s)`);
 if (problems.length) { log(`\n${problems.length} problem(s):\n` + problems.join("\n")); process.exitCode = 1; }
