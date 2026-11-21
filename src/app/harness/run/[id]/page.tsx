@@ -19,7 +19,7 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
   const run = getRun(id);
   if (!run) notFound();
   return (
-    <div className="mx-auto max-w-[1320px] px-4 pt-6 sm:px-6">
+    <div className="gutter pt-6 pb-20">
       <div className="capture-hide mb-4 flex items-center justify-between gap-2 text-[13px]">
         <Link href="/harness" className="text-text-3 hover:text-text">← Harness</Link>
         <Link href={`/harness/compare/${id}`} className="btn btn-sm">Compare view</Link>

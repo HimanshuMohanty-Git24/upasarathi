@@ -33,7 +33,7 @@ export function DrawerProvider({ children }: { children: React.ReactNode }) {
                 <IconClose />
               </button>
             </div>
-            <DrawerBody id={id} onNavigate={setId} />
+            <SourceBody id={id} onNavigate={setId} />
           </aside>
         </>
       )}
@@ -50,7 +50,8 @@ export function CiteChip({ id, label, className = "" }: { id: string; label: str
   );
 }
 
-function DrawerBody({ id, onNavigate }: { id: string; onNavigate: (id: string) => void }) {
+/** The source view for any node (verse, concept, situation, story, person, external), shared by the drawer and Explore. */
+export function SourceBody({ id, onNavigate, inExplore = false }: { id: string; onNavigate: (id: string) => void; inExplore?: boolean }) {
   const [kb, setKb] = useState<KnowledgeBase | null>(null);
   const [graph, setGraph] = useState<GraphData | null>(null);
   useEffect(() => {
@@ -59,7 +60,7 @@ function DrawerBody({ id, onNavigate }: { id: string; onNavigate: (id: string) =
   }, []);
   if (!kb || !graph) return <p className="p-5 muted">Loading…</p>;
   const lite = kb.verses.find((v) => v.id === id);
-  if (lite) return <VerseView id={id} up={lite.up} kb={kb} graph={graph} onNavigate={onNavigate} />;
+  if (lite) return <VerseView id={id} up={lite.up} kb={kb} graph={graph} onNavigate={onNavigate} inExplore={inExplore} />;
   const node = graph.nodes.find((n) => n.id === id);
   if (!node) return <p className="p-5 muted">Not found: {id}</p>;
   if (node.type === "External") {
@@ -89,7 +90,7 @@ function DrawerBody({ id, onNavigate }: { id: string; onNavigate: (id: string) =
         </div>
       )}
       <Related id={id} graph={graph} onNavigate={onNavigate} />
-      <Link className="btn btn-sm" href={`/map?node=${encodeURIComponent(id)}`}>See it in the map</Link>
+      {!inExplore && <Link className="btn btn-sm" href={`/explore?node=${encodeURIComponent(id)}`}>See it in the cosmos</Link>}
     </div>
   );
 }
@@ -118,7 +119,7 @@ function Related({ id, graph, onNavigate }: { id: string; graph: GraphData; onNa
   );
 }
 
-function VerseView({ id, up, kb, graph, onNavigate }: { id: string; up: string; kb: KnowledgeBase; graph: GraphData; onNavigate: (id: string) => void }) {
+function VerseView({ id, up, kb, graph, onNavigate, inExplore }: { id: string; up: string; kb: KnowledgeBase; graph: GraphData; onNavigate: (id: string) => void; inExplore: boolean }) {
   const [v, setV] = useState<Verse | null>(null);
   const [b, setB] = useState<Bhashya | null>(null);
   useEffect(() => {
@@ -157,7 +158,10 @@ function VerseView({ id, up, kb, graph, onNavigate }: { id: string; up: string; 
         </details>
       ))}
       <Related id={id} graph={graph} onNavigate={onNavigate} />
-      <Link className="btn btn-sm" href={`/u/${up}/${v.ref}`}>Open in the reader</Link>
+      <div className="flex flex-wrap gap-2">
+        <Link className="btn btn-sm" href={`/u/${up}/${v.ref}`}>Open in the reader</Link>
+        {!inExplore && <Link className="btn btn-sm btn-ghost" href={`/explore?node=${encodeURIComponent(id)}`}>See it in the cosmos</Link>}
+      </div>
     </div>
   );
 }

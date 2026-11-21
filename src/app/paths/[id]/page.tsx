@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCorpus, getKb, getPaths } from "@/lib/server/data";
 import { PathView, type StepData } from "@/components/paths/PathView";
+import { IconArrow } from "@/components/ui/Icons";
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -10,7 +11,8 @@ export function generateStaticParams() {
 }
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  return { title: getPaths().find((p) => p.id === id)?.title ?? "Path" };
+  const p = getPaths().find((x) => x.id === id);
+  return { title: p?.title ?? "Path", description: p?.intro };
 }
 
 export default async function PathPage({ params }: { params: Promise<{ id: string }> }) {
@@ -31,18 +33,30 @@ export default async function PathPage({ params }: { params: Promise<{ id: strin
   });
   const next = paths[paths.indexOf(path) + 1];
   return (
-    <div className="mx-auto max-w-[860px] px-4 pt-8 sm:px-6">
-      <Link href="/paths" className="text-[13px] text-text-3 hover:text-text">← All paths</Link>
-      <p className="eyebrow mt-5">{path.subtitle}</p>
-      <h1 className="mt-1 text-[32px] font-semibold tracking-tight">{path.title}</h1>
-      <p className="mt-3 text-[16px] text-text-2">{path.intro}</p>
-      <PathView pathId={path.id} steps={steps} />
-      {next && (
-        <Link href={`/paths/${next.id}`} className="card mt-10 flex items-center justify-between p-5 hover:border-line-3">
-          <span><span className="eyebrow">Next path</span><span className="block text-[17px] font-semibold">{next.title}</span></span>
-          <span aria-hidden>→</span>
-        </Link>
-      )}
+    <div className="gutter pb-24 pt-8">
+      <PathView
+        pathId={path.id}
+        steps={steps}
+        header={
+          <div>
+            <Link href="/paths" className="text-[13px] text-text-3 hover:text-text">← All paths</Link>
+            <p className="eyebrow mt-6 !text-accent">{path.subtitle}</p>
+            <h1 className="display mt-2 text-[clamp(34px,3vw,46px)] leading-[1.05]">{path.title}</h1>
+            <p className="mt-3 text-[15px] leading-relaxed text-text-2">{path.intro}</p>
+          </div>
+        }
+        footer={
+          next && (
+            <Link href={`/paths/${next.id}`} className="tile mt-12 flex items-center justify-between p-6">
+              <span>
+                <span className="eyebrow">Next path</span>
+                <span className="display mt-1 block text-[26px]">{next.title}</span>
+              </span>
+              <IconArrow size={20} />
+            </Link>
+          )
+        }
+      />
     </div>
   );
 }

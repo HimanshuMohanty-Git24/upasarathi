@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { RunView, type RunContext } from "./RunView";
-import { SettingsDialog } from "./SettingsDialog";
+import { ui } from "@/lib/client/ui-store";
 import { loadEngine } from "@/lib/client/data";
 import { browserTransport } from "@/lib/client/transport";
 import { hasKey, useSettings } from "@/lib/client/settings";
@@ -18,7 +18,6 @@ export function LiveHarness({ presets, axes, corpusSize }: { presets: Preset[]; 
   const [ctx, setCtx] = useState<RunContext | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const ready = hasKey(s);
   const recorded = useMemo(() => (preset && preset.prompt === prompt ? preset.id : null), [preset, prompt]);
 
@@ -66,7 +65,7 @@ export function LiveHarness({ presets, axes, corpusSize }: { presets: Preset[]; 
           {ready ? (
             <button className="btn btn-accent" onClick={go} disabled={busy || !prompt.trim()}>{busy ? "Running…" : "Run the harness"}</button>
           ) : (
-            <button className="btn btn-accent" onClick={() => setSettingsOpen(true)}>Add a free key to run live</button>
+            <button className="btn btn-accent" onClick={ui.openSettings}>Connect a model to run live</button>
           )}
           {recorded && <Link className="btn" href={`/harness/run/${recorded}`}>Replay the recorded run (no key)</Link>}
           <span className="text-[12.5px] text-text-3">{ready ? `${s.model} · judge ${s.judgeModel}${s.judgeModel === s.model ? " (same model)" : ""} · 3 calls per run` : "Keys stay in this browser."}</span>
@@ -74,7 +73,6 @@ export function LiveHarness({ presets, axes, corpusSize }: { presets: Preset[]; 
         {note && <p className="mt-3 rounded-lg bg-surface-2 px-3 py-2 text-[13px]">{note}</p>}
       </div>
       {run && ctx && <RunView run={run} ctx={ctx} mode={busy ? "live" : "static"} />}
-      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
     </div>
   );
 }

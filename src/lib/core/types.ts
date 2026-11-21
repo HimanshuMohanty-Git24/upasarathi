@@ -31,6 +31,8 @@ export interface GraphData {
   nodes: GNode[];
   edges: GEdge[];
   layout: Record<string, [number, number]>;
+  /** Precomputed 3D positions (build time, deterministic): the cosmos. */
+  layout3d?: Record<string, [number, number, number]>;
 }
 
 export interface TextMeta {

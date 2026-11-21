@@ -1,4 +1,4 @@
-// A handful of stroke icons (no icon dependency).
+// Stroke icons (no icon dependency).
 type P = { size?: number; className?: string };
 const base = (size = 16) => ({ width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true });
 
@@ -14,3 +14,34 @@ export const IconMoon = ({ size, className }: P) => (<svg {...base(size)} classN
 export const IconCheck = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M5 12.5l4.5 4.5L19 7" /></svg>);
 export const IconAlert = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M12 3l9.5 17h-19z" /><path d="M12 10v4M12 17.5v.01" /></svg>);
 export const IconReplay = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.6" /><path d="M4 4v4.6h4.6" /></svg>);
+export const IconOrbit = ({ size, className }: P) => (<svg {...base(size)} className={className}><circle cx="12" cy="12" r="2.5" /><ellipse cx="12" cy="12" rx="10" ry="4.2" /><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)" /></svg>);
+export const IconBook = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M3 5.5A1.5 1.5 0 0 1 4.5 4H10a2 2 0 0 1 2 2v14a1.5 1.5 0 0 0-1.5-1.5H3z" /><path d="M21 5.5A1.5 1.5 0 0 0 19.5 4H14a2 2 0 0 0-2 2v14a1.5 1.5 0 0 1 1.5-1.5H21z" /></svg>);
+export const IconRoute = ({ size, className }: P) => (<svg {...base(size)} className={className}><circle cx="6" cy="19" r="2.2" /><circle cx="18" cy="5" r="2.2" /><path d="M8 19h7.5a3.5 3.5 0 0 0 0-7h-7a3.5 3.5 0 0 1 0-7H16" /></svg>);
+export const IconScale = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z" /></svg>);
+export const IconSearch = ({ size, className }: P) => (<svg {...base(size)} className={className}><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>);
+export const IconChat = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M4 5h16v11H9l-5 4z" /></svg>);
+export const IconDownload = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M12 3v12M7 10l5 5 5-5M4 20h16" /></svg>);
+export const IconEye = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>);
+export const IconEyeOff = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M3 3l18 18M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2" /></svg>);
+export const IconPlus = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M12 5v14M5 12h14" /></svg>);
+export const IconMinus = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M5 12h14" /></svg>);
+export const IconFit = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>);
+export const IconSend = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M12 19V5M6 11l6-6 6 6" /></svg>);
+export const IconTrash = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></svg>);
+export const IconLayers = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M12 3l9 5-9 5-9-5z" /><path d="M3 13l9 5 9-5" /></svg>);
+export const IconTerminal = ({ size, className }: P) => (<svg {...base(size)} className={className}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 9l3 3-3 3M12 15h5" /></svg>);
+export const IconCopy = ({ size, className }: P) => (<svg {...base(size)} className={className}><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>);
+export const IconFile = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z" /><path d="M14 3v5h5" /></svg>);
+
+/** The brand mark: a chariot wheel (the Kaṭha's chariot) with the self at its hub. */
+export const Mark = ({ size = 26, className }: P) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" className={className} aria-hidden>
+    <circle cx="16" cy="16" r="13" fill="none" stroke="var(--gold)" strokeWidth="1.6" />
+    <circle cx="16" cy="16" r="9" fill="none" stroke="var(--accent)" strokeWidth="1" opacity=".55" />
+    {Array.from({ length: 8 }, (_, i) => {
+      const a = (i / 8) * Math.PI * 2;
+      return <line key={i} x1={16 + Math.cos(a) * 3.2} y1={16 + Math.sin(a) * 3.2} x2={16 + Math.cos(a) * 12.4} y2={16 + Math.sin(a) * 12.4} stroke="var(--gold)" strokeWidth="1" opacity=".7" />;
+    })}
+    <circle cx="16" cy="16" r="2.6" fill="var(--accent)" />
+  </svg>
+);

@@ -2,7 +2,7 @@
 // corpus, walks two hops through the graph, and freezes an evidence packet: the only material the re-aligned model
 // may cite. No model is involved; it runs in ~10–30 ms in the browser.
 import { buildSearch, searchIndex, type SearchIndex } from "./search.ts";
-import { indexGraph, induced, REL_WEIGHT, type GraphIndex } from "./graph.ts";
+import { indexGraph, induced, REL_LABEL, REL_WEIGHT, type GraphIndex } from "./graph.ts";
 import { fold } from "./text.ts";
 import type { GEdge, GraphData, KnowledgeBase, Rubric, VerseLite } from "./types.ts";
 
@@ -51,7 +51,7 @@ export const detectCrisis = (s: string) => CRISIS.some((re) => re.test(s));
 
 const cueRe = (cue: string) => new RegExp(`(^|[^a-z])${cue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/'/g, "'?")}($|[^a-z])`, "i");
 
-export function diagnose(E: Engine, query: string, opts: { maxVerses?: number } = {}): Diagnosis {
+export function diagnose(E: Engine, query: string, opts: { maxVerses?: number; extraSeeds?: string[]; themes?: { id: string; why: string }[] } = {}): Diagnosis {
   const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
   const { kb, gi } = E;
   const q = query.replace(/[’‘]/g, "'");
@@ -90,6 +90,11 @@ export function diagnose(E: Engine, query: string, opts: { maxVerses?: number } 
 
   // 3 · lexical search over translations, IAST, concepts and stories
   searchIndex(E.search, q, 12).forEach((h, rank) => seed(h.id, (h.id.includes(":") ? 0.8 : 1) / (1 + rank * 0.35), "shares wording with the request"));
+  // 3b · follow-ups carry the previous answer's sources forward (bounded, visible to the caller)
+  for (const id of opts.extraSeeds ?? []) seed(id, 1.2, "carried over from the previous answer");
+  // 3c · everyday language mapped to the ideas that answer it ("a job that pays double" → śreyas and preyas)
+  for (const t of opts.themes ?? []) seed(t.id, 2.2, t.why);
+  const themed = (opts.themes ?? []).some((t) => gi.nodes.has(t.id));
 
   // 4 · two-hop walk from every seed, scoring by the strongest relation that reached a node
   const scores = new Map<string, { score: number; why: string }>();
@@ -129,7 +134,7 @@ export function diagnose(E: Engine, query: string, opts: { maxVerses?: number } 
 
   const strongest = dilemmas[0]?.score ?? 0;
   // A single lexical overlap is not evidence: PARTIAL needs a request pattern or a verse reached through the graph.
-  const status: EvidenceStatus = strongest >= 2.5 && verses.length >= 2 ? "SUPPORTED" : strongest > 0 || verses.some((v) => v.score >= 1.5) ? "PARTIAL" : "INSUFFICIENT_EVIDENCE";
+  const status: EvidenceStatus = strongest >= 2.5 && verses.length >= 2 ? "SUPPORTED" : strongest > 0 || (themed && verses.length > 0) || verses.some((v) => v.score >= 1.5) ? "PARTIAL" : "INSUFFICIENT_EVIDENCE";
   const used = status === "INSUFFICIENT_EVIDENCE" ? [] : verses;
   const subNodes = new Set<string>([...(top ? [`dilemma:${top.id}`] : []), ...concepts.map((c) => c.id), ...used.map((v) => v.id), ...stories.map((s) => s.id)]);
   const diag: Diagnosis = {
@@ -153,9 +158,11 @@ export function diagnose(E: Engine, query: string, opts: { maxVerses?: number } 
   return diag;
 }
 
+/** Why a node was reached, in words: "follows KaU 1.2.1", "teaches Śreyas", "in story Naciketas and Death". */
 function relWhy(E: Engine, e: GEdge, to: string): string {
   const other = E.gi.nodes.get(e.s === to ? e.t : e.s);
-  return `${e.type.toLowerCase().replace(/_/g, " ")} ${other?.label ?? ""}`.trim();
+  const verb = e.type === "IN_STORY" ? (e.s === to ? "in story" : "includes") : e.s === to ? REL_LABEL[e.type].out : REL_LABEL[e.type].in;
+  return `${verb} ${other?.label ?? ""}`.trim();
 }
 
 export function citeLabel(E: Engine, id: string): string {

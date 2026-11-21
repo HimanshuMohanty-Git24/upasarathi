@@ -1,29 +1,47 @@
+"use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Mark } from "@/components/ui/Icons";
 
 export function Footer() {
+  const path = usePathname();
+  if (path.startsWith("/explore")) return null;
   return (
-    <footer className="mt-20 border-t border-line">
-      <div className="mx-auto grid max-w-[1240px] gap-8 px-4 py-10 text-[13px] text-text-3 sm:px-6 md:grid-cols-3">
+    <footer className="border-t border-line bg-[var(--bg-2)]">
+      <div className="gutter grid gap-10 py-14 text-[13.5px] text-text-3 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <div>
-          <p className="font-semibold text-text-2">UpaSārathi · उपसारथि</p>
-          <p className="mt-2 max-w-sm">
-            The charioteer who sits near. A reflective and research tool, not a source of religious authority or personal advice. Editorial links are labelled as editorial.
+          <div className="flex items-center gap-2.5 text-text">
+            <Mark size={26} />
+            <span className="text-[16px] font-semibold">UpaSārathi</span>
+            <span className="deva text-[15px] text-text-3" style={{ lineHeight: 1 }}>उपसारथि</span>
+          </div>
+          <p className="mt-3 max-w-[42ch] leading-relaxed">
+            <i>Upa</i>, near; <i>sārathi</i>, the charioteer. A reflective and research tool built on the Principal Upanishads, not a source of religious authority or personal advice. Editorial links are labelled as editorial.
           </p>
         </div>
         <div>
+          <p className="eyebrow">Explore</p>
+          <ul className="mt-3 space-y-1.5">
+            <li><Link className="hover:text-text" href="/explore">The cosmos (3D graph)</Link></li>
+            <li><Link className="hover:text-text" href="/u">Read the nine texts</Link></li>
+            <li><Link className="hover:text-text" href="/paths">Guided paths</Link></li>
+            <li><Link className="hover:text-text" href="/harness">The alignment harness</Link></li>
+          </ul>
+        </div>
+        <div>
           <p className="eyebrow">Sources</p>
-          <ul className="mt-2 space-y-1">
-            <li>Devanagari, IAST and chant: <a className="underline" href="https://upanishads.org.in/" target="_blank" rel="noreferrer">upanishads.org.in</a></li>
-            <li>Translations: V. Panoli, Swami Gambhīrānanda, Swami Swahananda, Swami Mādhavānanda (108 Upanishads, comp. R. Sheppard)</li>
-            <li>Śaṅkara&apos;s commentary: S. Sitarama Sastri, G. Jha, Swami Nikhilananda, Swami Mādhavānanda via <a className="underline" href="https://www.wisdomlib.org/" target="_blank" rel="noreferrer">Wisdom Library</a></li>
+          <ul className="mt-3 space-y-1.5">
+            <li>Devanagari, IAST, chant: <a className="underline decoration-line-3 underline-offset-2 hover:text-text" href="https://upanishads.org.in/" target="_blank" rel="noreferrer">upanishads.org.in</a></li>
+            <li>Translations: Panoli, Gambhīrānanda, Swahananda, Mādhavānanda</li>
+            <li>Śaṅkara&apos;s commentary via <a className="underline decoration-line-3 underline-offset-2 hover:text-text" href="https://www.wisdomlib.org/" target="_blank" rel="noreferrer">Wisdom Library</a></li>
           </ul>
         </div>
         <div>
           <p className="eyebrow">The series</p>
-          <ul className="mt-2 space-y-1">
-            <li><a className="underline" href="https://gitaviswa.vercel.app" target="_blank" rel="noreferrer">GitaViśva</a>, the Bhagavad Gītā as a graph</li>
-            <li>VedAnvaya, the Vedas as a graph</li>
-            <li><Link className="underline" href="/harness">How the harness scores</Link></li>
+          <ul className="mt-3 space-y-1.5">
+            <li><a className="hover:text-text" href="https://gitaviswa.vercel.app" target="_blank" rel="noreferrer">GitaViśva</a> · the Bhagavad Gītā</li>
+            <li>VedAnvaya · the Vedas</li>
+            <li>UpaSārathi · the Upanishads</li>
           </ul>
         </div>
       </div>

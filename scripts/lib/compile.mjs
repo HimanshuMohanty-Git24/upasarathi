@@ -4,6 +4,8 @@
 import { readFile, readdir, access } from "node:fs/promises";
 import { join } from "node:path";
 import { normDeva, foldIast, dice, hash } from "../../src/lib/core/text.ts";
+import { forceSimulation, forceLink, forceManyBody, forceCenter, forceRadial } from "d3-force-3d";
+import { ALPHA_DECAY, CHARGE, LAYOUT_TICKS, VELOCITY_DECAY, containForce, hubPosition, linkDistance, linkStrength, radialStrength, radialTarget } from "../../src/lib/core/layout.ts";
 
 const exists = (p) => access(p).then(() => true, () => false);
 const readJson = async (p) => JSON.parse(await readFile(p, "utf8"));
@@ -215,8 +217,9 @@ export async function compile(ROOT) {
     }
   }
 
-  // ── layout for the full map (deterministic) ───────────────────────────────────────────────────────
-  const layout = forceLayout(nodes, edges);
+  // ── 3D cosmos layout (deterministic; the browser never runs a simulation) ─────────────────────────
+  const layout3d = cosmosLayout(nodes, edges, texts);
+  const layout = Object.fromEntries(Object.entries(layout3d).map(([id, p]) => [id, [p[0], p[2]]]));
 
   // ── artifacts ─────────────────────────────────────────────────────────────────────────────────────
   const verseLite = verses.map((v) => ({
@@ -224,7 +227,7 @@ export async function compile(ROOT) {
     tr: v.tr?.text || "", trBy: v.tr?.by || "", audio: v.audio?.mp3 || null, hasBhashya: v.hasBhashya,
   }));
   const kb = { texts, verses: verseLite, concepts, dilemmas, stories, persons, external };
-  const graph = { nodes, edges, layout };
+  const graph = { nodes, edges, layout, layout3d };
   const corpusHash = (hash(JSON.stringify(verseLite)) >>> 0).toString(16).padStart(8, "0");
   const runFiles = (await exists(join(ROOT, "public", "data", "runs"))) ? (await readdir(join(ROOT, "public", "data", "runs"))).filter((f) => f.endsWith(".json") && f !== "index.json") : [];
   const complete = texts.filter((t) => t.scope === "complete");
@@ -279,41 +282,80 @@ function validExternal(corpus, ref, cfg) {
   return true;
 }
 
-// Fruchterman–Reingold with a seeded start: verses cluster round their Upanishad, ideas sit in the middle.
-function forceLayout(nodes, edges) {
-  let seed = 7;
-  const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
-  const ups = nodes.filter((n) => n.type === "Upanishad");
-  const P = new Map();
-  const R = 900;
-  ups.forEach((u, i) => P.set(u.id, [R * Math.cos((2 * Math.PI * i) / ups.length), R * Math.sin((2 * Math.PI * i) / ups.length)]));
-  for (const n of nodes) {
-    if (P.has(n.id)) continue;
-    const hub = n.up ? P.get(`up:${n.up}`) : null;
-    P.set(n.id, hub ? [hub[0] + (rnd() - 0.5) * 300, hub[1] + (rnd() - 0.5) * 300] : [(rnd() - 0.5) * 500, (rnd() - 0.5) * 500]);
+// The cosmos: the nine Upanishads fixed on the outer ring; the teaching core laid out as a mandala of concentric rings
+// (axes at the heart, then concepts, situations, stories, people), each node at the angle of the Upanishads that
+// teach it; only passages and cross-corpus nodes are placed by d3-force-3d around their hubs.
+const CORE_RINGS = { Axis: { r: 62, y: 46 }, Concept: { r: 150, y: 22 }, Dilemma: { r: 212, y: 4 }, Story: { r: 262, y: -10 }, Person: { r: 304, y: -22 } };
+function cosmosLayout(nodes, edges, texts) {
+  const order = new Map(texts.map((t, i) => [`up:${t.id}`, i + 1]));
+  const hubAngle = new Map(texts.map((t, i) => [t.id, ((i) / texts.length) * Math.PI * 2 - Math.PI / 2]));
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const adj = new Map();
+  for (const e of edges) {
+    if (e.type === "PART_OF" || e.type === "NEXT") continue;
+    (adj.get(e.s) || adj.set(e.s, []).get(e.s)).push(e.t);
+    (adj.get(e.t) || adj.set(e.t, []).get(e.t)).push(e.s);
   }
-  const ids = nodes.map((n) => n.id);
-  const idx = new Map(ids.map((id, i) => [id, i]));
-  const X = ids.map((id) => P.get(id)[0]), Y = ids.map((id) => P.get(id)[1]);
-  const E = edges.filter((e) => e.type !== "NEXT").map((e) => [idx.get(e.s), idx.get(e.t), e.type === "PART_OF" ? 0.35 : 1]);
-  const k = 46, n = ids.length;
-  for (let it = 0; it < 260; it++) {
-    const t = 60 * (1 - it / 260) + 2;
-    const dx = new Float64Array(n), dy = new Float64Array(n);
-    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-      let ex = X[i] - X[j], ey = Y[i] - Y[j];
-      const d2 = ex * ex + ey * ey + 0.01, f = (k * k) / d2;
-      dx[i] += ex * f; dy[i] += ey * f; dx[j] -= ex * f; dy[j] -= ey * f;
+  // Preferred angle: circular mean of the hub angles of the passages reachable within two hops.
+  const prefer = (id) => {
+    let sx = 0, sz = 0;
+    const seen = new Set([id]);
+    let ring = [id];
+    for (let hop = 0; hop < 2; hop++) {
+      const next = [];
+      for (const x of ring) for (const y of adj.get(x) || []) {
+        if (seen.has(y)) continue;
+        seen.add(y);
+        next.push(y);
+        const n = byId.get(y);
+        if (n?.type === "Verse") { const a = hubAngle.get(n.up); const w = hop === 0 ? 1 : 0.35; sx += Math.cos(a) * w; sz += Math.sin(a) * w; }
+      }
+      ring = next;
     }
-    for (const [a, b, w] of E) {
-      const ex = X[a] - X[b], ey = Y[a] - Y[b], d = Math.sqrt(ex * ex + ey * ey) + 0.01, f = (d * w) / k;
-      dx[a] -= (ex / d) * f * d * 0.02; dy[a] -= (ey / d) * f * d * 0.02; dx[b] += (ex / d) * f * d * 0.02; dy[b] += (ey / d) * f * d * 0.02;
+    return sx === 0 && sz === 0 ? 0 : Math.atan2(sz, sx);
+  };
+  const fixed = new Map();
+  for (const t of texts) fixed.set(`up:${t.id}`, hubPosition(order.get(`up:${t.id}`), texts.length));
+  for (const [type, ring] of Object.entries(CORE_RINGS)) {
+    const list = nodes.filter((n) => n.type === type).map((n) => ({ id: n.id, a: prefer(n.id) })).sort((a, b) => a.a - b.a || a.id.localeCompare(b.id));
+    if (!list.length) continue;
+    // Start each node at its preferred angle, then relax neighbours apart to a minimum gap (order preserved).
+    const gap = ((Math.PI * 2) / list.length) * 0.82;
+    const ang = list.map((n) => n.a);
+    for (let it = 0; it < 400; it++) {
+      let moved = false;
+      for (let i = 0; i < ang.length; i++) {
+        const j = (i + 1) % ang.length;
+        let d = ang[j] - ang[i];
+        if (j === 0) d += Math.PI * 2;
+        if (d < gap) {
+          const push = (gap - d) / 2;
+          ang[i] -= push;
+          ang[j] += push;
+          moved = true;
+        }
+      }
+      if (!moved) break;
     }
-    for (let i = 0; i < n; i++) {
-      dx[i] -= X[i] * 0.004; dy[i] -= Y[i] * 0.004; // gentle gravity
-      const d = Math.sqrt(dx[i] * dx[i] + dy[i] * dy[i]) + 0.01, s = Math.min(d, t) / d;
-      X[i] += dx[i] * s; Y[i] += dy[i] * s;
-    }
+    list.forEach((n, i) => {
+      const a = ang[i];
+      fixed.set(n.id, [ring.r * Math.cos(a), ring.y + 6 * Math.sin(a * 3), ring.r * Math.sin(a)]);
+    });
   }
-  return Object.fromEntries(ids.map((id, i) => [id, [Math.round(X[i]), Math.round(Y[i])]]));
+  const sim = nodes.map((n) => {
+    const f = fixed.get(n.id);
+    return f ? { id: n.id, type: n.type, x: f[0], y: f[1], z: f[2], fx: f[0], fy: f[1], fz: f[2] } : { id: n.id, type: n.type };
+  });
+  const links = edges.map((e) => ({ source: e.s, target: e.t, type: e.type }));
+  const s = forceSimulation(sim, 3)
+    .alphaDecay(ALPHA_DECAY)
+    .velocityDecay(VELOCITY_DECAY)
+    .force("link", forceLink(links).id((d) => d.id).distance((l) => linkDistance(l.type)).strength((l) => linkStrength(l.type)))
+    .force("charge", forceManyBody().strength(CHARGE.strength).distanceMax(CHARGE.distanceMax))
+    .force("radial", forceRadial((d) => radialTarget(d.type)).strength((d) => radialStrength(d.type)))
+    .force("contain", containForce())
+    .stop();
+  for (let i = 0; i < LAYOUT_TICKS; i++) s.tick();
+  const r = (v) => Math.round(v * 10) / 10;
+  return Object.fromEntries(sim.map((n) => [n.id, [r(n.x), r(n.y), r(n.z)]]));
 }
