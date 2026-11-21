@@ -7,21 +7,22 @@ import { compile } from "./lib/compile.mjs";
 import { verifyRuns } from "./lib/runs.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const { outputs, errors, warnings, facts, crossChecks } = await compile(ROOT);
+const built = await compile(ROOT);
+const { outputs, errors, warnings, facts, crossChecks } = built;
 const stale = [];
 for (const [file, body] of Object.entries(outputs)) {
   const have = await readFile(join(ROOT, "public", "data", file), "utf8").catch(() => null);
   if (have !== body) stale.push(file);
 }
-const runs = await verifyRuns(ROOT);
+const runs = await verifyRuns(ROOT, built);
 
 for (const w of [...warnings, ...runs.warnings]) console.log(`warning: ${w}`);
 const all = [...errors, ...stale.map((f) => `public/data/${f} is stale: run npm run data`), ...runs.errors];
-console.log(`integrity gate: ${errors.length} error(s) · ${facts.anchors} anchors · ${crossChecks.length} cross-reference wording checks`);
+console.log(`integrity gate: ${errors.length} error(s) · ${facts.anchors} anchor and keyword checks · ${crossChecks.length} wording checks`);
 console.log(`artifacts: ${Object.keys(outputs).length - stale.length}/${Object.keys(outputs).length} up to date`);
-console.log(`runs: ${runs.summary.length} verified (${runs.summary.map((s) => `${s.id} ${s.totals}`).join(", ")})`);
+console.log(`runs: ${runs.summary.length} verified${runs.summary.length ? ` across ${new Set(runs.summary.map((s) => s.model)).size} model(s)` : ""}`);
 if (all.length) {
-  console.error(`\n${all.length} error(s):\n` + all.map((e) => `  ✗ ${e}`).join("\n"));
+  console.error(`\n${all.length} error(s):\n` + all.slice(0, 60).map((e) => `  ✗ ${e}`).join("\n"));
   process.exit(1);
 }
 console.log("data:verify passed · 0 errors");

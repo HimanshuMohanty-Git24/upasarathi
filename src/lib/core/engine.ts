@@ -2,7 +2,7 @@
 // corpus, walks two hops through the graph, and freezes an evidence packet: the only material the re-aligned model
 // may cite. No model is involved; it runs in ~10–30 ms in the browser.
 import { buildSearch, searchIndex, type SearchIndex } from "./search.ts";
-import { indexGraph, induced, REL_LABEL, REL_WEIGHT, type GraphIndex } from "./graph.ts";
+import { expandGraph, indexGraph, induced, NAVIGATION_ONLY, REL_LABEL, REL_WEIGHT, type CompactGraph, type GraphIndex } from "./graph.ts";
 import { fold } from "./text.ts";
 import type { GEdge, GraphData, KnowledgeBase, Rubric, VerseLite } from "./types.ts";
 
@@ -36,13 +36,14 @@ export interface Engine {
   verse: Map<string, VerseLite>;
 }
 
-export function createEngine(kb: KnowledgeBase, graph: GraphData, rubric: Rubric): Engine {
+export function createEngine(kb: KnowledgeBase, graph: GraphData | CompactGraph, rubric: Rubric): Engine {
   const docs = [
     ...kb.verses.map((v) => ({ id: v.id, text: `${v.tr} ${v.iast}` })),
     ...kb.concepts.map((c) => ({ id: `concept:${c.id}`, text: `${c.iast} ${c.en} ${c.desc}`, boost: 0.8 })),
     ...kb.stories.map((s) => ({ id: `story:${s.id}`, text: `${s.title} ${s.summary}`, boost: 0.7 })),
   ];
-  return { kb, graph, gi: indexGraph(graph), rubric, search: buildSearch(docs), verse: new Map(kb.verses.map((v) => [v.id, v])) };
+  const full = expandGraph(graph) as GraphData;
+  return { kb, graph: full, gi: indexGraph(full), rubric, search: buildSearch(docs), verse: new Map(kb.verses.map((v) => [v.id, v])) };
 }
 
 // Crisis language: the harness steps aside and shows human help first, with or without a key.
@@ -51,7 +52,7 @@ export const detectCrisis = (s: string) => CRISIS.some((re) => re.test(s));
 
 const cueRe = (cue: string) => new RegExp(`(^|[^a-z])${cue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/'/g, "'?")}($|[^a-z])`, "i");
 
-export function diagnose(E: Engine, query: string, opts: { maxVerses?: number; extraSeeds?: string[]; themes?: { id: string; why: string }[] } = {}): Diagnosis {
+export function diagnose(E: Engine, query: string, opts: { maxVerses?: number; extraSeeds?: string[]; themes?: { id: string; why: string; weight?: number }[] } = {}): Diagnosis {
   const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
   const { kb, gi } = E;
   const q = query.replace(/[’‘]/g, "'");
@@ -93,7 +94,7 @@ export function diagnose(E: Engine, query: string, opts: { maxVerses?: number; e
   // 3b · follow-ups carry the previous answer's sources forward (bounded, visible to the caller)
   for (const id of opts.extraSeeds ?? []) seed(id, 1.2, "carried over from the previous answer");
   // 3c · everyday language mapped to the ideas that answer it ("a job that pays double" → śreyas and preyas)
-  for (const t of opts.themes ?? []) seed(t.id, 2.2, t.why);
+  for (const t of opts.themes ?? []) seed(t.id, 2.2 * (t.weight ?? 1), t.why);
   const themed = (opts.themes ?? []).some((t) => gi.nodes.has(t.id));
 
   // 4 · two-hop walk from every seed, scoring by the strongest relation that reached a node
@@ -107,12 +108,12 @@ export function diagnose(E: Engine, query: string, opts: { maxVerses?: number; e
     credit(id, s.score, s.why);
     const ring1 = gi.adj.get(id) || [];
     for (const a of ring1) {
-      if (a.e.type === "PART_OF") continue;
+      if (a.e.type === "PART_OF" || a.e.type === "HAS_STEM" || a.e.type === "DISTILLS") continue;
       const w = REL_WEIGHT[a.e.type];
       credit(a.to, s.score * w * 0.6, a.e.why || relWhy(E, a.e, a.to));
       if (gi.nodes.get(a.to)?.type === "Upanishad") continue;
       for (const b of gi.adj.get(a.to) || []) {
-        if (b.to === id || b.e.type === "PART_OF" || b.e.type === "NEXT") continue;
+        if (b.to === id || NAVIGATION_ONLY.has(b.e.type)) continue;
         credit(b.to, (s.score * w * REL_WEIGHT[b.e.type] * 0.2) / (1 + Math.log10(1 + (gi.adj.get(b.to)?.length || 1))), b.e.why || relWhy(E, b.e, b.to));
       }
     }

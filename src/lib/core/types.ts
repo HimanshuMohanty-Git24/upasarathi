@@ -1,8 +1,26 @@
 // Shared domain types. This folder (src/lib/core) is framework-free and uses erasable TypeScript only, so the
 // Next app, the Node scripts (node strips the types) and the tests all run the same code.
 
-export type NodeType = "Upanishad" | "Verse" | "Concept" | "Dilemma" | "Axis" | "Story" | "Person" | "External";
-export type Rel = "PART_OF" | "NEXT" | "IN_STORY" | "TEACHES" | "CONTRASTS_WITH" | "DIAGNOSES" | "CROSS_REFERENCES" | "GROUNDS";
+export type NodeType = "Upanishad" | "Verse" | "Concept" | "Dilemma" | "Axis" | "Story" | "Person" | "External" | "Veda" | "Stem";
+export type Rel =
+  | "PART_OF"
+  | "NEXT"
+  | "IN_STORY"
+  | "TEACHES"
+  | "CONTRASTS_WITH"
+  | "DIAGNOSES"
+  | "CROSS_REFERENCES"
+  | "GROUNDS"
+  /** Upanishad → the Veda it belongs to (the Veda-Sāra lineage). */
+  | "DISTILLS"
+  /** Mantra → the Saṃhitā mantra it takes up (checked against VedAnvaya's text). */
+  | "ROOTED_IN"
+  /** Mantra → a Brahma Sūtra topic that reads it (Śaṅkara's adhikaraṇa). */
+  | "READ_BY"
+  /** Mantra → another mantra Śaṅkara cites while commenting on it. */
+  | "CITES"
+  /** Mantra → a key Sanskrit stem that occurs in it (from the word analysis). */
+  | "HAS_STEM";
 /** Who asserts an edge: the text's own structure, Śaṅkara, this project's editors, or a model (never shipped unreviewed). */
 export type Basis = "text" | "shankara" | "editorial" | "model";
 
@@ -51,7 +69,17 @@ export interface TextMeta {
   aliases: string[];
   audio: { whole: string; durationSec: number; chanter: string | null } | null;
   bhashya: { translator: string; edition: string } | null;
+  /** "partial" when some passages have Sanskrit and IAST but no English yet (stated on the page and in /about). */
+  translation?: "complete" | "partial";
+  /** Veda-Sāra lineage: which Veda, school and Brāhmaṇa or Āraṇyaka this Upanishad closes. */
+  lineage?: { veda: string; vedaLabel: string; school: string; seat: string; kind: string };
+  /** Passages with a word-by-word analysis. */
+  analysed?: number;
+  /** Passages with Śaṅkara's commentary. */
+  commented?: number;
 }
+/** One analysed word: [Devanagari, IAST, short gloss, lemma key]. */
+export type Word = [string, string, string, string];
 
 export interface Translation {
   text: string;
@@ -73,6 +101,12 @@ export interface Verse {
   alt: Translation[];
   audio: { mp3: string; whole: [number, number] } | null;
   hasBhashya: boolean;
+  /** Word-by-word analysis where the source provides one. */
+  words?: Word[];
+  /** The peace invocation chanted before the text (passage "0"). */
+  shanti?: boolean;
+  /** A plain-English takeaway, clearly labelled as editorial. */
+  takeaway?: string;
 }
 export interface Bhashya {
   author: string;
@@ -152,10 +186,14 @@ export interface Preset {
   hook: string;
   control?: boolean;
   sharpened?: boolean;
+  /** Multi-turn presets: the pushback sent after the first answer. */
+  followUp?: string;
 }
 export interface Rubric {
   version: number;
   baselineSystem: string;
+  /** The honesty control: a strong generic prompt with no scripture (the ablation). */
+  controlSystem: string;
   defaults: { provider: string; model: string; judgeModel: string };
   axes: Axis[];
   realignSystem: string;
@@ -178,23 +216,51 @@ export interface VerseLite {
   trBy: string;
   audio: string | null;
   hasBhashya: boolean;
+  shanti?: boolean;
 }
-/** Everything the browser-side engine needs, in one file (public/data/kb.json). */
-export interface KnowledgeBase {
+export interface GlossaryTerm {
+  id: string;
+  term: string;
+  sa: string;
+  /** One plain-English sentence. */
+  short: string;
+  /** Other spellings that should also show the tooltip. */
+  forms: string[];
+  concept?: string;
+}
+export interface VedaInfo {
+  id: string;
+  label: string;
+  sa: string;
+  essence: string;
+  vedanvaya: string | null;
+}
+/** The index: everything except the passages themselves (public/data/index.json, small, loaded up front). */
+export interface KbIndex {
   texts: TextMeta[];
-  verses: VerseLite[];
+  /** [id, up, ref] for every passage, so a citation resolves without loading the text. */
+  verseIds: [string, string, string][];
   concepts: Concept[];
   dilemmas: Dilemma[];
   stories: Story[];
   persons: Person[];
-  external: Record<string, { label: string; url: string | null; corpus: string }>;
+  external: Record<string, { label: string; url: string | null; corpus: string; title?: string; site?: string | null; path?: string | null }>;
+  vedas: VedaInfo[];
+  glossary: GlossaryTerm[];
+}
+/** Everything the browser-side engine needs: the index plus every passage (assembled from per-text files). */
+export interface KnowledgeBase extends Omit<KbIndex, "verseIds"> {
+  verses: VerseLite[];
 }
 
 export interface Facts {
   texts: { complete: number; excerpts: number; total: number };
   mantras: { complete: number; excerpts: number; total: number };
+  shanti: number;
   bhashyaVerses: number;
   audioVerses: number;
+  translatedVerses: number;
+  analysedVerses: number;
   concepts: number;
   dilemmas: number;
   stories: number;
@@ -204,6 +270,12 @@ export interface Facts {
   presets: number;
   nodes: number;
   edges: number;
+  semanticEdges: number;
+  shankaraLinks: number;
+  vedaSaraLinks: number;
+  stems: number;
+  lemmas: number;
+  glossary: number;
   anchors: number;
   crossCorpus: number;
   runs: number;

@@ -41,7 +41,7 @@ export function CommandPalette() {
     const kb = E.kb;
     const node = (id: string) => () => {
       explore.select(id);
-      router.push(`/explore?node=${encodeURIComponent(id)}`);
+      router.push(`/map?node=${encodeURIComponent(id)}`);
     };
     const verse = (id: string) => {
       const v = E.verse.get(id)!;
@@ -75,6 +75,7 @@ export function CommandPalette() {
     for (const d of kb.dilemmas) if (match(d.en) || match(d.desc)) out.push({ id: `dilemma:${d.id}`, kind: "Human situation", title: d.en, sub: d.desc, go: node(`dilemma:${d.id}`) });
     for (const s of kb.stories) if (match(s.title)) out.push({ id: `story:${s.id}`, kind: "Story", title: s.title, sub: s.summary.slice(0, 120), go: node(`story:${s.id}`) });
     for (const p of kb.persons) if (match(p.iast) || match(p.role)) out.push({ id: `person:${p.id}`, kind: "Person", title: p.iast, sub: p.role, go: node(`person:${p.id}`) });
+    for (const n of E.graph.nodes) if ((n.type === "Veda" || n.type === "Stem") && (match(n.label) || match(n.sub ?? ""))) out.push({ id: n.id, kind: n.type === "Veda" ? "Veda" : "Word", title: n.label, sub: n.sub, go: node(n.id) });
     if (query.length > 2) {
       for (const r of searchIndex(E.search, query, 10)) {
         if (out.some((h) => h.id === r.id)) continue;

@@ -3,6 +3,8 @@
 // the ask box, and buttons that open the conversation.
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import type { GEdge, GNode } from "@/lib/core/types";
+import { MiniGraph } from "@/components/graph/MiniGraph";
 import { useEffect, useRef, useState } from "react";
 import { askStore, useAsk } from "@/lib/client/ask-store";
 import { useReady } from "@/lib/client/capture";
@@ -24,7 +26,7 @@ export function CosmosPreview() {
   return (
     <div ref={ref} className="absolute inset-0">
       {show ? (
-        <Cosmos3D preview onPick={(id) => router.push(`/explore?node=${encodeURIComponent(id)}`)} />
+        <Cosmos3D preview onPick={(id) => router.push(`/map?node=${encodeURIComponent(id)}`)} />
       ) : (
         <div className="grid h-full place-items-center">
           <p className="thinking text-[14px] text-text-3">Gathering the cosmos</p>
@@ -32,6 +34,12 @@ export function CosmosPreview() {
       )}
     </div>
   );
+}
+
+/** The compact Veda → Upanishad map: five roots, thirteen texts. Click to open either in the Map. */
+export function VedaMiniMap({ nodes, edges, height = 460 }: { nodes: GNode[]; edges: GEdge[]; height?: number }) {
+  const router = useRouter();
+  return <MiniGraph nodes={nodes} edges={edges} direction="LR" height={height} onPick={(id) => router.push(`/map?node=${encodeURIComponent(id)}&roots=1`)} />;
 }
 
 export function AskOpen({ children, className = "btn btn-outline btn-lg", question }: { children: React.ReactNode; className?: string; question?: string }) {

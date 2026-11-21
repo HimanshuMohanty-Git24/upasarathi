@@ -12,7 +12,7 @@
   ],
   "scope": "complete",
   "expect": 64,
-  "order": 4,
+  "order": 5,
   "tagline": "The higher and the lower knowledge; two birds on one tree; truth alone triumphs.",
   "ingest": {
     "org": "mundaka",
@@ -30,7 +30,9 @@
     "bhashya": {
       "book": "mundaka-upanishad-shankara-bhashya",
       "translator": "S. Sitarama Sastri",
-      "edition": "Madras, 1898–1905"
-    }
+      "edition": "Madras, 1898–1905",
+      "crawl": true
+    },
+    "shanti": "Bhadraṃ karṇebhiḥ"
   }
 }

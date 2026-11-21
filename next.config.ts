@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   async redirects() {
-    return [{ source: "/map", destination: "/explore", permanent: true }];
+    return [{ source: "/explore", destination: "/map", permanent: true }];
   },
   async headers() {
     return [

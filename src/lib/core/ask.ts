@@ -61,15 +61,20 @@ export function askThemes(question: string): { id: string; why: string }[] {
 
 const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 /** People named in the question lead to the stories they appear in ("Why did Virocana leave?" → Indra and Virocana). */
-export function askNames(E: Engine, question: string): { id: string; why: string }[] {
+export function askNames(E: Engine, question: string): { id: string; why: string; weight: number }[] {
   const q = ` ${fold(question).replace(/[^a-z\s]/g, " ")} `;
-  const out: { id: string; why: string }[] = [];
-  for (const p of E.kb.persons) {
+  const named = E.kb.persons.filter((p) => {
     const name = fold(p.iast).replace(/[^a-z]/g, "").replace(/a$/, "");
-    if (name.length < 4 || !new RegExp(`\\s${name}a?s?\\s`).test(q)) continue;
-    for (const s of E.kb.stories) if (s.cast.includes(p.id) && !out.some((o) => o.id === `story:${s.id}`)) out.push({ id: `story:${s.id}`, why: `the question names ${p.iast}` });
-  }
-  return out.slice(0, 3);
+    return name.length >= 4 && new RegExp(`\\s${name}a?s?\\s`).test(q);
+  });
+  // A story that casts more of the people named comes first ("Virocana and Indra" is Prajāpati's teaching,
+  // not every story Indra appears in).
+  return E.kb.stories
+    .map((s) => ({ s, cast: named.filter((p) => s.cast.includes(p.id)) }))
+    .filter((x) => x.cast.length)
+    .sort((a, b) => b.cast.length - a.cast.length)
+    .slice(0, 3)
+    .map(({ s, cast }, _i, all) => ({ id: `story:${s.id}`, why: `the question names ${cast.map((p) => p.iast).join(" and ")}`, weight: cast.length === all[0].cast.length ? 1.6 : 0.5 }));
 }
 
 export function askRetrieve(E: Engine, question: string, history: AskTurn[] = []): Diagnosis {

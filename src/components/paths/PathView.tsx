@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { PathStep } from "@/lib/core/types";
 import { AudioButton } from "@/components/verse/AudioButton";
 import { CiteChip } from "@/components/verse/Drawer";
+import { Gloss } from "@/components/ui/Glossary";
 import { IconChat, IconCheck } from "@/components/ui/Icons";
 import { useReady } from "@/lib/client/capture";
 import { askStore } from "@/lib/client/ask-store";
@@ -90,7 +91,7 @@ export function PathView({ pathId, steps, header, footer }: { pathId: string; st
               )}
               <div className="mt-5 border-l-2 border-line-3 pl-4">
                 <p className="text-[11px] uppercase tracking-[0.08em] text-text-4">Editorial note · not a translation</p>
-                <p className="mt-1 text-[15.5px] leading-relaxed text-text-2">{s.note}</p>
+                <p className="mt-1 text-[15.5px] leading-relaxed text-text-2"><Gloss max={3}>{s.note}</Gloss></p>
               </div>
               <p className="mt-5 rounded-xl bg-[var(--accent-soft)] px-4 py-3 text-[15.5px]"><span className="font-semibold text-accent">Reflect · </span>{s.prompt}</p>
               <div className="capture-hide mt-5 flex flex-wrap gap-2">

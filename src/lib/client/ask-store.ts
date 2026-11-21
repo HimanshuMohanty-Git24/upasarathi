@@ -1,5 +1,6 @@
 "use client";
-// Ask: one conversation shared by every page, plus the subgraph the latest answer is drawn from (Explore lights it up).
+// Ask: one conversation shared by every page, plus the subgraph the latest answer is drawn from (the map lights it up).
+// The conversation is kept in this browser (localStorage), local-first: no account, nothing stored on a server.
 import { useSyncExternalStore } from "react";
 import { askRequest, askRetrieve, auditAnswer, composeOfflineAnswer, type AskTurn } from "@/lib/core/ask";
 import type { Citation } from "@/lib/core/citations";
@@ -32,10 +33,38 @@ export interface AskState {
 
 let state: AskState = { open: false, busy: false, messages: [], highlight: null, draft: "" };
 const listeners = new Set<() => void>();
+const KEY = "upasarathi:ask";
+let hydrated = false;
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+function persist() {
+  if (!hydrated || typeof window === "undefined") return;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      const keep = state.messages.filter((m) => !m.pending).slice(-60).map(({ pending: _p, ...m }) => m);
+      localStorage.setItem(KEY, JSON.stringify(keep));
+    } catch {
+      /* storage full or blocked: the conversation stays in memory */
+    }
+  }, 400);
+}
 const set = (patch: Partial<AskState>) => {
   state = { ...state, ...patch };
+  if (patch.messages) persist();
   listeners.forEach((l) => l());
 };
+/** Restore the saved conversation once, after hydration (never during server render). */
+function hydrate() {
+  if (hydrated || typeof window === "undefined") return;
+  hydrated = true;
+  try {
+    const raw = localStorage.getItem(KEY);
+    const saved = raw ? (JSON.parse(raw) as AskMessage[]) : [];
+    if (saved.length && !state.messages.length) set({ messages: saved });
+  } catch {
+    /* ignore a corrupt entry */
+  }
+}
 const update = (id: string, patch: Partial<AskMessage>) => set({ messages: state.messages.map((m) => (m.id === id ? { ...m, ...patch } : m)) });
 
 export const useAsk = () =>
@@ -53,6 +82,7 @@ export const askStore = {
   toggle: () => set({ open: !state.open }),
   setDraft: (draft: string) => set({ draft }),
   clear: () => set({ messages: [], highlight: null }),
+  hydrate,
   clearHighlight: () => set({ highlight: null }),
   showInGraph: (m: AskMessage) => m.subgraph && set({ highlight: { label: m.question ?? "Answer", nodes: m.subgraph.nodes, edges: m.subgraph.edges } }),
   ask,

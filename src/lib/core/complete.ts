@@ -2,7 +2,7 @@
 // Claude goes through the official Anthropic SDK; every other provider speaks OpenAI chat-completions over fetch.
 // Not imported by browser code (the browser always talks to /api/llm).
 import Anthropic from "@anthropic-ai/sdk";
-import { PROVIDERS, LlmError, chatBody, classifyHttp, emptyError, readCompletion, sseDeltas, type LlmRequest, type LlmResult, type ProviderId } from "./llm.ts";
+import { PROVIDERS, LlmError, chatBody, classifyHttp, emptyError, readCompletion, sseDeltas, stripThinking, type LlmRequest, type LlmResult, type ProviderId } from "./llm.ts";
 
 export interface CompleteOptions {
   key?: string | null;
@@ -45,15 +45,18 @@ async function completeOpenAI(req: LlmRequest, o: CompleteOptions): Promise<LlmR
   if (!req.stream || !res.body) return readCompletion(await res.json(), req.model, Date.now() - t0);
   let text = "";
   let finish: string | null = null;
+  let usage: { in: number; out: number } | undefined;
   for await (const d of sseDeltas(res.body)) {
     if (d.delta) {
       text += d.delta;
-      o.onToken?.(d.delta, text);
+      o.onToken?.(d.delta, stripThinking(text));
     }
     if (d.finish) finish = d.finish;
+    if (d.usage) usage = d.usage;
   }
-  if (!text.trim()) throw emptyError(finish);
-  return { text: text.trim(), model: req.model, ms: Date.now() - t0, finish };
+  const clean = stripThinking(text);
+  if (!clean) throw emptyError(finish);
+  return { text: clean, model: req.model, ms: Date.now() - t0, finish, ...(usage ? { usage } : {}) };
 }
 
 // ── Claude (Anthropic SDK) ─────────────────────────────────────────────────────────────────────────────
@@ -104,7 +107,7 @@ async function completeClaude(req: LlmRequest, o: CompleteOptions): Promise<LlmR
     }
     const text = message.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("").trim();
     if (!text) throw emptyError(message.stop_reason ?? null);
-    return { text, model: message.model, ms: Date.now() - t0, finish: message.stop_reason ?? null };
+    return { text, model: message.model, ms: Date.now() - t0, finish: message.stop_reason ?? null, usage: { in: message.usage?.input_tokens ?? 0, out: message.usage?.output_tokens ?? 0 } };
   } catch (e) {
     throw claudeError(e);
   }

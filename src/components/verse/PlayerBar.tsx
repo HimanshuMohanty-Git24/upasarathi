@@ -1,0 +1,108 @@
+"use client";
+// The one <audio> element of the site. Plays a single mantra, a queue (continuous chapter or whole-text play, mantra
+// by mantra), or a whole-text recording; with 0.75 / 1 / 1.25 speed and a loop for chanting practice. Hidden when
+// nothing is queued.
+import { useEffect, useRef, useState } from "react";
+import { player, usePlayer } from "@/lib/client/player";
+import { IconClose, IconLoop, IconNext, IconPause, IconPlay, IconPrev } from "@/components/ui/Icons";
+
+const fmt = (s: number) => (Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}` : "–:––");
+
+export function PlayerBar() {
+  const st = usePlayer();
+  const ref = useRef<HTMLAudioElement>(null);
+  const [t, setT] = useState({ pos: 0, dur: 0 });
+  const track = st.queue[st.index] ?? null;
+
+  // Load the current track (a segment of a whole recording seeks to its start).
+  useEffect(() => {
+    const a = ref.current;
+    if (!a || !track) return;
+    if (a.dataset.src !== track.src) {
+      a.src = track.src;
+      a.dataset.src = track.src;
+    }
+    if (track.start !== undefined) a.currentTime = track.start;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track?.src, track?.id, st.index]);
+  useEffect(() => {
+    const a = ref.current;
+    if (!a || !track) return;
+    a.playbackRate = st.rate;
+    if (st.playing) a.play().catch(() => player.fail("Recording unavailable"));
+    else a.pause();
+  }, [st.playing, st.rate, track]);
+
+  const onTime = () => {
+    const a = ref.current!;
+    const start = track?.start ?? 0;
+    const end = track?.end ?? a.duration;
+    setT({ pos: a.currentTime - start, dur: end - start });
+    if (track?.end !== undefined && a.currentTime >= track.end) onEnded();
+  };
+  const onEnded = () => {
+    const a = ref.current!;
+    if (st.loop) {
+      a.currentTime = track?.start ?? 0;
+      a.play().catch(() => {});
+    } else player.next();
+  };
+
+  if (!track) return <audio ref={ref} preload="none" hidden />;
+  const pct = t.dur > 0 ? Math.min(100, (t.pos / t.dur) * 100) : 0;
+  return (
+    <div className="player capture-hide" role="region" aria-label="Audio player">
+      <audio ref={ref} preload="metadata" onTimeUpdate={onTime} onEnded={onEnded} onError={() => player.fail("Recording unavailable")} hidden />
+      {st.queue.length > 1 && (
+        <button className="btn btn-ghost btn-icon !h-9 !w-9" onClick={player.prev} disabled={st.index === 0} aria-label="Previous mantra"><IconPrev size={15} /></button>
+      )}
+      <button className="btn btn-accent btn-icon !h-10 !w-10 !rounded-full" onClick={st.playing ? player.pause : player.resume} aria-label={st.playing ? "Pause" : "Play"}>
+        {st.playing ? <IconPause size={16} /> : <IconPlay size={15} />}
+      </button>
+      {st.queue.length > 1 && (
+        <button className="btn btn-ghost btn-icon !h-9 !w-9" onClick={player.next} disabled={st.index >= st.queue.length - 1} aria-label="Next mantra"><IconNext size={15} /></button>
+      )}
+      <div className="min-w-0 flex-1 px-1">
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="truncate text-[13px] font-semibold">
+            {track.label}
+            {st.queue.length > 1 && <span className="font-normal text-text-3"> · {st.index + 1} of {st.queue.length} · {st.title}</span>}
+          </p>
+          <span className="num shrink-0 text-[11.5px] text-text-3">{st.error ?? `${fmt(t.pos)} / ${fmt(t.dur)}`}</span>
+        </div>
+        <div
+          className="bar mt-1.5"
+          role="slider"
+          aria-label="Position"
+          aria-valuemin={0}
+          aria-valuemax={Math.round(t.dur) || 0}
+          aria-valuenow={Math.round(t.pos)}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            const a = ref.current;
+            if (!a) return;
+            if (e.key === "ArrowRight") a.currentTime += 5;
+            if (e.key === "ArrowLeft") a.currentTime -= 5;
+          }}
+          onClick={(e) => {
+            const a = ref.current;
+            if (!a || !t.dur) return;
+            const r = e.currentTarget.getBoundingClientRect();
+            a.currentTime = (track.start ?? 0) + ((e.clientX - r.left) / r.width) * t.dur;
+          }}
+        >
+          <i style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+      <div className="seg hidden !rounded-[10px] !p-[2px] sm:inline-flex" role="group" aria-label="Speed">
+        {([0.75, 1, 1.25] as const).map((r) => (
+          <button key={r} aria-pressed={st.rate === r} onClick={() => player.setRate(r)} className="!h-7 !px-2 !text-[12px]">{r}×</button>
+        ))}
+      </div>
+      <button className={`btn btn-icon !h-9 !w-9 ${st.loop ? "btn-accent" : "btn-ghost"}`} onClick={player.toggleLoop} aria-pressed={st.loop} aria-label="Loop this mantra" title="Loop this mantra (chanting practice)">
+        <IconLoop size={15} />
+      </button>
+      <button className="btn btn-ghost btn-icon !h-9 !w-9" onClick={player.close} aria-label="Close player"><IconClose size={15} /></button>
+    </div>
+  );
+}

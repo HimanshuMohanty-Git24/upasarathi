@@ -17,8 +17,10 @@ export const KIND_COLOR: Record<GNode["type"], string> = {
   Person: "var(--n-person)",
   Upanishad: "var(--n-text)",
   External: "var(--n-external)",
+  Veda: "var(--gold)",
+  Stem: "var(--n-stem)",
 };
-const KIND_LABEL: Record<GNode["type"], string> = { Verse: "verse", Concept: "concept", Dilemma: "situation", Axis: "axis", Story: "story", Person: "person", Upanishad: "text", External: "elsewhere" };
+const KIND_LABEL: Record<GNode["type"], string> = { Verse: "mantra", Concept: "concept", Dilemma: "situation", Axis: "axis", Story: "story", Person: "person", Upanishad: "Upanishad", External: "elsewhere", Veda: "Veda", Stem: "stem" };
 
 type Data = { n: GNode; on: boolean; dim: boolean };
 function GNodeView({ data }: NodeProps<Node<Data>>) {

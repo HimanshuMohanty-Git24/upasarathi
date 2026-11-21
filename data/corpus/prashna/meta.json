@@ -9,14 +9,11 @@
     "praśna",
     "mantra"
   ],
-  "scope": "excerpts",
-  "order": 9,
-  "tagline": "Six seekers, six questions, and a teacher who would not speak untruth.",
+  "scope": "complete",
+  "order": 4,
+  "tagline": "Six seekers, six questions on life, breath, sleep, OM and the person of sixteen parts.",
   "ingest": {
     "org": "prashna",
-    "refs": [
-      "6.1"
-    ],
     "pdf": {
       "start": "^Prasna Upanishad$",
       "end": "Here ends the Prasnopanishad",
@@ -30,7 +27,10 @@
     "bhashya": {
       "book": "prashna-upanishad-shankara-bhashya",
       "translator": "S. Sitarama Sastri",
-      "edition": "Madras, 1898–1905"
-    }
-  }
+      "edition": "Madras, 1898–1905",
+      "crawl": true
+    },
+    "shanti": "Bhadraṃ karṇebhiḥ"
+  },
+  "expect": 67
 }

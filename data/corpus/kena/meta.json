@@ -28,7 +28,9 @@
     "bhashya": {
       "book": "kena-upanishad-shankara-bhashya",
       "translator": "S. Sitarama Sastri",
-      "edition": "Madras, 1898–1905"
-    }
+      "edition": "Madras, 1898–1905",
+      "crawl": true
+    },
+    "shanti": "Āpyāyantu"
   }
 }

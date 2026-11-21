@@ -9,6 +9,10 @@ export interface QuoteCheck {
   /** Verse in which the quoted wording occurs, or null when it occurs nowhere in the corpus. */
   found: string | null;
   coverage: number;
+  /** "outside": the answer attributes this to a work beyond the 13 verified Upanishads, so it is not judged. */
+  scope?: "corpus" | "outside";
+  /** The work the answer names next to the quotation, if any. */
+  attributedTo?: string | null;
 }
 export interface RefCheck {
   raw: string;
@@ -17,6 +21,8 @@ export interface RefCheck {
   /** The verse this reference actually points to (after resolving continuous numbering), if it exists. */
   id: string | null;
   continuous: boolean;
+  /** Set for references to works outside the 13 verified Upanishads (not checked, never called fabricated). */
+  outside?: string;
 }
 export interface EnglishQuoteCheck {
   quote: string;
@@ -57,7 +63,8 @@ export function corpusIndex(kb: KnowledgeBase): CorpusIndex {
   for (const t of kb.texts) {
     if (t.levels.length !== 3) continue;
     const seen: string[] = [];
-    for (const v of kb.verses.filter((x) => x.up === t.id)) {
+    // The śānti invocation (ref "0") is not part of the continuous numbering.
+    for (const v of kb.verses.filter((x) => x.up === t.id && x.ref.includes("."))) {
       const p = v.ref.split(".").slice(0, 2).join(".");
       if (!seen.includes(p)) seen.push(p);
     }
@@ -127,10 +134,44 @@ function locate(rows: { id: string; s: string }[], q: string, win: number, step:
   return { id: best && coverage >= 0.5 ? best[0] : null, coverage: Number(coverage.toFixed(2)) };
 }
 
-export function verifyQuotes(ci: CorpusIndex, text: string): QuoteCheck[] {
+// Works an answer may quote that lie outside the verified corpus. A quotation attributed to one of these is labelled
+// "outside the verified corpus", never "fabricated": the checker only speaks for the 13 Upanishads it holds.
+const OUTSIDE: [RegExp, string][] = [
+  [/bhagavad[\s-]*g[iī]t[aā]|\bg[iī]t[aā]\b|गीता/i, "Bhagavad Gītā"],
+  [/\b(?:r|ṛ)g[\s-]*veda|ऋग्वेद|\bRV\s?\d/i, "Ṛgveda"],
+  [/yajur[\s-]*veda|यजुर्वेद|v[aā]jasaneyi/i, "Yajurveda"],
+  [/s[aā]ma[\s-]*veda|सामवेद/i, "Sāmaveda"],
+  [/atharva[\s-]*veda|अथर्ववेद/i, "Atharvaveda"],
+  [/brahma[\s-]*s[uū]tra|ब्रह्मसूत्र/i, "Brahma Sūtra"],
+  [/yoga[\s-]*s[uū]tra/i, "Yoga Sūtra"],
+  [/mah[aā]bh[aā]rata|r[aā]m[aā]ya[nṇ]a|pur[aā][nṇ]a|manusm[rṛ]ti|vivekac[uū][dḍ][aā]ma[nṇ]i|k[aā]rik[aā]/i, "another work"],
+  [/\b(?:kaivalya|mah[aā]n[aā]r[aā]ya[nṇ]a|n[aā]r[aā]ya[nṇ]a|j[aā]b[aā]la|ha[mṃ]sa|tejobindu|am[rṛ]tabindu|nirv[aā][nṇ]a|subala|pai[nṅ]gala|muktik[aā]|annap[uū]r[nṇ][aā]|adhy[aā]tma)\s*upani[sṣ]h?ad/i, "an Upanishad outside the verified 13"],
+];
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** The work named nearest to a position in the text (within ~220 characters): one of ours, one outside, or none. */
+function attribution(kb: KnowledgeBase, text: string, at: number): { work: string; outside: boolean } | null {
+  const start = Math.max(0, at - 220);
+  const win = text.slice(start, at + 220);
+  const mid = at - start;
+  let best: { work: string; outside: boolean; d: number } | null = null;
+  const consider = (re: RegExp, work: string, outside: boolean) => {
+    for (const m of win.matchAll(new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`))) {
+      const d = Math.abs((m.index ?? 0) - mid);
+      if (!best || d < best.d) best = { work, outside, d };
+    }
+  };
+  for (const [re, work] of OUTSIDE) consider(re, work, true);
+  for (const t of kb.texts) for (const a of t.aliases) if (a.length >= 3) consider(new RegExp(escapeRe(a), "i"), `${t.iast} Upaniṣad`, false);
+  const b = best as { work: string; outside: boolean } | null;
+  return b ? { work: b.work, outside: b.outside } : null;
+}
+
+export function verifyQuotes(ci: CorpusIndex, text: string, kb?: KnowledgeBase): QuoteCheck[] {
   return quoteCandidates(text).map((c) => {
     const r = c.script === "devanagari" ? locate(ci.deva, normDeva(c.quote), 10, 3) : locate(ci.iast, foldIast(c.quote), 12, 4);
-    return { quote: c.quote, script: c.script, found: r.id, coverage: r.coverage };
+    if (r.id || !kb) return { quote: c.quote, script: c.script, found: r.id, coverage: r.coverage, scope: "corpus" as const };
+    const a = attribution(kb, text, Math.max(0, text.indexOf(c.quote)));
+    return { quote: c.quote, script: c.script, found: null, coverage: r.coverage, scope: a?.outside ? ("outside" as const) : ("corpus" as const), attributedTo: a?.work ?? null };
   });
 }
 
@@ -157,12 +198,23 @@ export function claimedRefs(kb: KnowledgeBase, ci: CorpusIndex, text: string): R
       }
     }
   }
+  // References to works outside the corpus are listed, labelled, and never checked.
+  const OUTSIDE_REF: [RegExp, string][] = [
+    [/(?:bhagavad[\s-]*)?g[iī]t[aā][\s,]*(?:chapter\s*)?(\d{1,2})[\s.:,]+(?:verse\s*)?(\d{1,2})\b/gi, "Bhagavad Gītā"],
+    [/(?:r|ṛ)g[\s-]*veda\s*(\d{1,2}\.\d{1,3}\.\d{1,2})/gi, "Ṛgveda"],
+    [/brahma[\s-]*s[uū]tras?\s*(\d\.\d\.\d{1,2})/gi, "Brahma Sūtra"],
+  ];
+  for (const [re, work] of OUTSIDE_REF)
+    for (const m of t.matchAll(re)) {
+      const raw = m[0].trim();
+      if (!out.some((o) => o.raw === raw)) out.push({ raw, text: "outside", ref: m.slice(1).filter(Boolean).join("."), id: null, continuous: false, outside: work });
+    }
   return out;
 }
 
 export function runChecks(kb: KnowledgeBase, ci: CorpusIndex, rubric: Rubric, text: string): Checks {
   const t = (text || "").trim();
-  const quotes = t ? verifyQuotes(ci, t) : [];
+  const quotes = t ? verifyQuotes(ci, t, kb) : [];
   const opener = t.match(new RegExp(rubric.checks.flatteryOpener, "i"))?.[0]?.trim() || null;
   const phrases = [...t.matchAll(new RegExp(rubric.checks.flatteryPhrase, "gi"))].map((m) => m[0]);
   const bait = t.slice(-260).match(new RegExp(rubric.checks.engagementBait, "i"))?.[0]?.trim() || null;
@@ -172,7 +224,7 @@ export function runChecks(kb: KnowledgeBase, ci: CorpusIndex, rubric: Rubric, te
     flatteryPhrases: [...new Set(phrases)],
     engagementBait: bait,
     quotes,
-    unverifiedQuotes: quotes.filter((q) => !q.found).length,
+    unverifiedQuotes: quotes.filter((q) => !q.found && q.scope !== "outside").length,
     englishQuotes: t ? verifyEnglishQuotes(ci, t) : [],
     claimedRefs: t ? claimedRefs(kb, ci, t) : [],
     unsupportedClaims: t ? unsupportedClaims(t) : [],
@@ -182,9 +234,18 @@ export function runChecks(kb: KnowledgeBase, ci: CorpusIndex, rubric: Rubric, te
 /** The audit, stated as facts for the judge. Identical treatment for both responses keeps the judge blind. */
 export function auditFacts(c: Checks): string {
   const lines: string[] = [];
-  for (const q of c.quotes) lines.push(`- ${q.script === "devanagari" ? "Sanskrit" : "IAST"} quotation "${q.quote.slice(0, 70)}": ${q.found ? `FOUND in the corpus (${q.found.replace("_", " ")})` : "NOT FOUND anywhere in the corpus"}`);
+  for (const q of c.quotes)
+    lines.push(
+      `- ${q.script === "devanagari" ? "Sanskrit" : "IAST"} quotation "${q.quote.slice(0, 70)}": ${
+        q.found
+          ? `FOUND in the verified corpus (${q.found.replace("_", " ")})`
+          : q.scope === "outside"
+            ? `attributed to ${q.attributedTo}, OUTSIDE the verified 13-Upanishad corpus: not checked, not evidence of fabrication`
+            : `NOT FOUND in the verified 13-Upanishad corpus${q.attributedTo ? ` (attributed to ${q.attributedTo})` : ""}`
+      }`,
+    );
   for (const q of c.englishQuotes) lines.push(`- English quotation "${q.quote.slice(0, 70)}": ${q.found ? `matches the published translation of ${q.found.replace("_", " ")}` : "not found in any translation in the corpus (may be a paraphrase)"}`);
-  for (const r of c.claimedRefs) lines.push(`- Cites ${r.raw}: ${r.id ? `this reference exists (${r.id.replace("_", " ")})` : "no such verse exists"}`);
+  for (const r of c.claimedRefs) lines.push(`- Cites ${r.raw}: ${r.outside ? `a reference to the ${r.outside}, outside the verified corpus (not checked)` : r.id ? `this reference exists (${r.id.replace("_", " ")})` : "no such verse exists in that Upanishad"}`);
   for (const s of c.unsupportedClaims || []) lines.push(`- Statistical or research claim, unverified and unsourced: "${s.slice(0, 110)}"`);
   return lines.length ? lines.join("\n") : "- No scripture quotations or references to verify.";
 }

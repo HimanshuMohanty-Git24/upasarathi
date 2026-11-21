@@ -12,7 +12,7 @@
    "ajo nityaḥ śāśvato’yaṃ purāṇo",
    "na hanyate hanyamāne śarīre ||"
   ],
-  "source": "GitaViśva gita-verses.json (gita/gita)"
+  "source": "GitaViśva gita-verses.json"
  },
  "BG_2.19": {
   "sa": [
@@ -23,7 +23,7 @@
    "ya enaṃ vetti hantāraṃ yaścainaṃ manyate hatam |",
    "ubhau tau na vijānīto nāyaṃ hanti na hanyate ||"
   ],
-  "source": "GitaViśva gita-verses.json (gita/gita)"
+  "source": "GitaViśva gita-verses.json"
  },
  "BG_2.29": {
   "sa": [
@@ -38,7 +38,7 @@
    "āścaryavaccainamanyaḥ śrṛṇoti",
    "śrutvāpyenaṃ veda na caiva kaścit ||"
   ],
-  "source": "GitaViśva gita-verses.json (gita/gita)"
+  "source": "GitaViśva gita-verses.json"
  },
  "BG_8.11": {
   "sa": [
@@ -53,7 +53,7 @@
    "yadicchanto brahmacaryaṃ caranti",
    "tatte padaṃ saṃgraheṇa pravakṣye ||"
   ],
-  "source": "GitaViśva gita-verses.json (gita/gita)"
+  "source": "GitaViśva gita-verses.json"
  },
  "BG_15.1": {
   "sa": [
@@ -64,12 +64,97 @@
    "ūrdhvamūlamadhaḥśākhamaśvatthaṃ prāhuravyayam |",
    "chandāṃsi yasya parṇāni yastaṃ veda sa vedavit ||"
   ],
-  "source": "GitaViśva gita-verses.json (gita/gita)"
+  "source": "GitaViśva gita-verses.json"
+ },
+ "BG_13.14": {
+  "sa": [
+   "सर्वतः पाणिपादं तत्सर्वतोऽक्षिशिरोमुखम् ।",
+   "सर्वतः श्रुतिमल्लोके सर्वमावृत्य तिष्ठति ॥"
+  ],
+  "iast": [
+   "sarvataḥ pāṇipādaṃ tatsarvato’kṣiśiromukham |",
+   "sarvataḥ śrutimalloke sarvamāvṛtya tiṣṭhati ||"
+  ],
+  "source": "GitaViśva gita-verses.json"
+ },
+ "BG_8.9": {
+  "sa": [
+   "कविं पुराणमनुशासितार",
+   "मणोरणीयांसमनुस्मरेद्यः ।",
+   "सर्वस्य धातारमचिन्त्यरूप",
+   "मादित्यवर्णं तमसः परस्तात् ॥"
+  ],
+  "iast": [
+   "kaviṃ purāṇamanuśāsitāra",
+   "maṇoraṇīyāṃsamanusmaredyaḥ |",
+   "sarvasya dhātāramacintyarūpa",
+   "mādityavarṇaṃ tamasaḥ parastāt ||"
+  ],
+  "source": "GitaViśva gita-verses.json"
+ },
+ "BG_3.42": {
+  "sa": [
+   "इन्द्रियाणि पराण्याहुरिन्द्रियेभ्यः परं मनः ।",
+   "मनसस्तु परा बुद्धिर्यो बुद्धेः परतस्तु सः ॥"
+  ],
+  "iast": [
+   "indriyāṇi parāṇyāhurindriyebhyaḥ paraṃ manaḥ |",
+   "manasastu parā buddhiryo buddheḥ paratastu saḥ ||"
+  ],
+  "source": "GitaViśva gita-verses.json"
  },
  "RV_1.164.20": {
   "iast": [
-   "dvā́ suparṇā́ sayújā sákhāyā samānáṁ vr̥kṣám pári ṣasvajāte táyor anyáḥ píppalaṁ svādv átty ánaśnann anyó abhí cākaśīti"
+   "dvā su̍pa̱rṇā sa̱yujā̱ sakhā̍yā samā̱naṁ vṛ̱kṣam pari̍ ṣasvajāte | tayo̍r a̱nyaḥ pippa̍laṁ svā̱dv atty ana̍śnann a̱nyo a̱bhi cā̍kaśīti ||"
   ],
-  "source": "VedAnvaya VEDAWEB b01_h164_20_aufrecht"
+  "source": "VedAnvaya GRETIL RV 1.164.20"
+ },
+ "RV_4.40.5": {
+  "iast": [
+   "ha̱ṁsaḥ śu̍ci̱ṣad vasu̍r antarikṣa̱sad dhotā̍ vedi̱ṣad ati̍thir duroṇa̱sat | nṛ̱ṣad va̍ra̱sad ṛ̍ta̱sad vyo̍ma̱sad a̱bjā go̱jā ṛ̍ta̱jā a̍dri̱jā ṛ̱tam ||"
+  ],
+  "source": "VedAnvaya GRETIL RV 4.40.5"
+ },
+ "RV_10.90.3": {
+  "iast": [
+   "e̱tāvā̍n asya mahi̱māto̱ jyāyā̍m̐ś ca̱ pūru̍ṣaḥ | pādo̍ 'sya̱ viśvā̍ bhū̱tāni̍ tri̱pād a̍syā̱mṛta̍ṁ di̱vi ||"
+  ],
+  "source": "VedAnvaya GRETIL RV 10.90.3"
+ },
+ "RV_10.90.1": {
+  "iast": [
+   "sa̱hasra̍śīrṣā̱ puru̍ṣaḥ sahasrā̱kṣaḥ sa̱hasra̍pāt | sa bhūmi̍ṁ vi̱śvato̍ vṛ̱tvāty a̍tiṣṭhad daśāṅgu̱lam ||"
+  ],
+  "source": "VedAnvaya GRETIL RV 10.90.1"
+ },
+ "RV_10.90.2": {
+  "iast": [
+   "puru̍ṣa e̱vedaṁ sarva̱ṁ yad bhū̱taṁ yac ca̱ bhavya̍m | u̱tāmṛ̍ta̱tvasyeśā̍no̱ yad anne̍nāti̱roha̍ti ||"
+  ],
+  "source": "VedAnvaya GRETIL RV 10.90.2"
+ },
+ "RV_1.114.8": {
+  "iast": [
+   "mā na̍s to̱ke tana̍ye̱ mā na̍ ā̱yau mā no̱ goṣu̱ mā no̱ aśve̍ṣu rīriṣaḥ | vī̱rān mā no̍ rudra bhāmi̱to va̍dhīr ha̱viṣma̍nta̱ḥ sada̱m it tvā̍ havāmahe ||"
+  ],
+  "source": "VedAnvaya GRETIL RV 1.114.8"
+ },
+ "RV_1.90.9": {
+  "iast": [
+   "śaṁ no̍ mi̱traḥ śaṁ varu̍ṇa̱ḥ śaṁ no̍ bhavatv arya̱mā | śaṁ na̱ indro̱ bṛha̱spati̱ḥ śaṁ no̱ viṣṇu̍r urukra̱maḥ ||"
+  ],
+  "source": "VedAnvaya GRETIL RV 1.90.9"
+ },
+ "YV_31.18": {
+  "sa": "वेदा॒हमे॒तं पुरु॑षं म॒हान्त॑मादि॒त्यव॑र्णं॒ तम॑सः प॒रस्ता॑त् । तमे॒व वि॑दि॒त्वाति॑ मृ॒त्युमे॑ति॒ नान्यः पन्था॑ विद्य॒तेऽय॑नाय ।। १८ ।।",
+  "source": "VedAnvaya WIKISOURCE_SA शुक्लयजुर्वेदः/अध्यायः ३१#31.18"
+ },
+ "YV_16.2": {
+  "sa": "या ते॑ रुद्र शि॒वा त॒नूरघो॒राऽपा॑पकाशिनी । तया॑ नस्त॒न्वा शन्त॑मया॒ गिरि॑शन्ता॒भिचा॑कशीहि ।। २ ।।",
+  "source": "VedAnvaya WIKISOURCE_SA शुक्लयजुर्वेदः/अध्यायः १६#16.2"
+ },
+ "YV_16.3": {
+  "sa": "यामिषुं॑ गिरिशन्त॒ हस्ते॑ बि॒भर्ष्यस्त॑वे । शि॒वां गि॑रित्र॒ तां कु॑रु॒ मा हि॑ᳪं᳭सी॒: पुरु॑षं॒ जग॑त् ।। ३ ।।",
+  "source": "VedAnvaya WIKISOURCE_SA शुक्लयजुर्वेदः/अध्यायः १६#16.3"
  }
 }

@@ -2,18 +2,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { IconBook, IconKey, IconMoon, IconOrbit, IconRoute, IconSearch, IconSun, IconTerminal, Mark } from "@/components/ui/Icons";
+import { IconBook, IconHome, IconKey, IconMap, IconMoon, IconRoute, IconScale, IconSearch, IconSun, Mark } from "@/components/ui/Icons";
 import { hasKey, useSettings } from "@/lib/client/settings";
 import { PROVIDERS } from "@/lib/core/llm";
 import { toggleTheme } from "@/lib/client/theme";
 import { ui } from "@/lib/client/ui-store";
 
+// Five destinations: the arena (home), the 13 texts, guided paths, the Veda → Upanishad map, and the AI test.
 const LINKS = [
-  { href: "/explore", label: "Explore", icon: IconOrbit },
-  { href: "/u", label: "Read", icon: IconBook },
-  { href: "/paths", label: "Paths", icon: IconRoute },
-  { href: "/harness", label: "Harness", icon: IconTerminal },
+  { href: "/", label: "Home", icon: IconHome, title: "Home: the arena" },
+  { href: "/u", label: "Read", icon: IconBook, title: "Read the 13 Principal Upanishads" },
+  { href: "/paths", label: "Paths", icon: IconRoute, title: "Guided reading paths" },
+  { href: "/map", label: "Map", icon: IconMap, title: "Map: Veda → Upanishad → mantra" },
+  { href: "/harness", label: "Test an AI", icon: IconScale, title: "Test an AI against the Upanishads" },
 ];
+const isOn = (path: string, href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`));
 
 export function TopNav() {
   const path = usePathname();
@@ -51,9 +54,9 @@ export function TopNav() {
         </Link>
         <nav className="seg ml-1 hidden md:inline-flex" aria-label="Main">
           {LINKS.map((l) => {
-            const on = path === l.href || path.startsWith(`${l.href}/`);
+            const on = isOn(path, l.href);
             return (
-              <Link key={l.href} href={l.href} aria-current={on ? "page" : undefined}>
+              <Link key={l.href} href={l.href} aria-current={on ? "page" : undefined} title={l.title}>
                 <l.icon size={15} />
                 {l.label}
               </Link>
@@ -78,9 +81,9 @@ export function TopNav() {
       </div>
       <nav className="topnav-mobile gutter flex h-[44px] items-center gap-1 overflow-x-auto border-t border-line md:hidden" aria-label="Main (mobile)">
         {LINKS.map((l) => {
-          const on = path === l.href || path.startsWith(`${l.href}/`);
+          const on = isOn(path, l.href);
           return (
-            <Link key={l.href} href={l.href} aria-current={on ? "page" : undefined} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13.5px] ${on ? "bg-surface-3 text-text" : "text-text-3"}`}>
+            <Link key={l.href} href={l.href} aria-current={on ? "page" : undefined} className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13.5px] ${on ? "bg-surface-3 text-text" : "text-text-3"}`}>
               <l.icon size={14} />
               {l.label}
             </Link>

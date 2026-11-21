@@ -1,0 +1,38 @@
+{
+  "id": "maitri",
+  "abbrev": "MaiU",
+  "sa": "मैत्रायणीयोपनिषद्",
+  "iast": "Maitrī",
+  "en": "Maitri Upanishad",
+  "veda": "Kṛṣṇa Yajurveda",
+  "levels": [
+    "prapāṭhaka",
+    "khaṇḍa"
+  ],
+  "scope": "complete",
+  "translation": "partial",
+  "order": 13,
+  "tagline": "King Bṛhadratha, weary of the body, asks Śākāyanya for the Self; the elemental self, the three guṇas, and the sixfold yoga.",
+  "ingest": {
+    "wikisource": {
+      "title": "मैत्रायण्युपनिषत्",
+      "parser": "maitri"
+    },
+    "shanti": "Āpyāyantu",
+    "pdf": {
+      "start": "^Maitrayani Upanishad$",
+      "end": "Here ends the Maitrayani Upanishad",
+      "chapter": "^PRAPATHAKA (ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN)$"
+    }
+  },
+  "aliases": [
+    "Maitrayani Upanishad",
+    "Maitrayaniya",
+    "Maitri",
+    "Maitrāyaṇī",
+    "Maitrāyaṇīya",
+    "मैत्री",
+    "मैत्रायणी"
+  ],
+  "expect": 88
+}

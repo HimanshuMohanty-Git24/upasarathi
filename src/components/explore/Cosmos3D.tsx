@@ -8,12 +8,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph3D, { type ForceGraphMethods, type LinkObject, type NodeObject } from "react-force-graph-3d";
 import * as THREE from "three";
 import SpriteText from "three-spritetext";
-import { fetchData } from "@/lib/client/data";
+import { loadGraph, loadKb, loadLayout } from "@/lib/client/data";
 import { useAsk } from "@/lib/client/ask-store";
 import { explore, useExplore } from "@/lib/client/explore-store";
 import { useTheme } from "@/lib/client/theme";
 import { useReady } from "@/lib/client/capture";
-import { RING_R } from "@/lib/core/layout";
+import { CORE_RINGS as LAYOUT_RINGS, RING_R } from "@/lib/core/layout";
 import type { GNode as DNode, GraphData, KnowledgeBase, NodeType, Rel } from "@/lib/core/types";
 import { nodeColor } from "./palette";
 
@@ -23,15 +23,18 @@ type N = NodeObject<NodeT>;
 type L = LinkObject<NodeT, LinkT>;
 type LinkRec = { key: string; type: Rel; s: string; t: string };
 
-const STRUCT = new Set<Rel>(["PART_OF", "NEXT"]);
-const CORE_RINGS: [number, number][] = [[62, 46], [150, 22], [212, 4], [262, -10], [304, -22]];
+const STRUCT = new Set<Rel>(["PART_OF", "NEXT", "HAS_STEM", "DISTILLS"]);
+/** Links never drawn as lines (a stem touches hundreds of passages); they still count for emphasis. */
+const HIDDEN_LINKS = new Set<Rel>(["HAS_STEM"]);
+const ROOT_RELS = new Set<Rel>(["DISTILLS", "ROOTED_IN", "READ_BY"]);
+const CORE_RINGS: [number, number][] = Object.values(LAYOUT_RINGS).map((c) => [c.r * RING_R, c.y]);
 const ekey = (e: { s: string; t: string; type: string }) => `${e.s}|${e.t}|${e.type}`;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
-const KIND: Record<NodeType, string> = { Upanishad: "Upanishad", Verse: "Mantra", Concept: "Concept", Dilemma: "Human situation", Axis: "Alignment axis", Story: "Story", Person: "Person", External: "Elsewhere in the tradition" };
+const KIND: Record<NodeType, string> = { Veda: "Veda", Upanishad: "Upanishad", Verse: "Mantra", Concept: "Concept", Dilemma: "Human situation", Axis: "Alignment axis", Story: "Story", Person: "Person", External: "Elsewhere in the tradition", Stem: "Word" };
 
 // ── shared GPU resources ─────────────────────────────────────────────────────────────────────────────
 const geos = new Map<string, THREE.BufferGeometry>();
@@ -83,8 +86,12 @@ function ring(weight: number) {
 function radiusOf(n: NodeT, maxDeg: number) {
   const lift = Math.sqrt(Math.min(1, n.deg / Math.max(1, maxDeg)));
   switch (n.t) {
+    case "Veda":
+      return 13;
     case "Upanishad":
       return 9.5;
+    case "Stem":
+      return 2 + 1.4 * lift;
     case "Axis":
       return 4.4;
     case "Concept":
@@ -136,7 +143,8 @@ export default function Cosmos3D({ preview = false, offsetRight = 0, onPick }: {
   const [size, setSize] = useState({ w: 800, h: 600 });
   const [graph, setGraph] = useState<GraphData | null>(null);
   const [kb, setKb] = useState<KnowledgeBase | null>(null);
-  const { selected, colorBy, hidden, autoRotate, camera, flyTo } = useExplore();
+  const [layout, setLayout] = useState<Record<string, [number, number, number]> | null>(null);
+  const { selected, colorBy, hidden, autoRotate, camera, flyTo, roots, path } = useExplore();
   const { highlight } = useAsk();
   const theme = useTheme();
   const dark = theme === "dark";
@@ -146,8 +154,9 @@ export default function Cosmos3D({ preview = false, offsetRight = 0, onPick }: {
   const fonts = useRef({ sans: "Inter, system-ui, sans-serif", deva: "'Tiro Devanagari Sanskrit', 'Nirmala UI', serif" });
 
   useEffect(() => {
-    fetchData<GraphData>("graph.json").then(setGraph);
-    fetchData<KnowledgeBase>("kb.json").then(setKb);
+    loadGraph().then(setGraph);
+    loadLayout().then(setLayout);
+    loadKb().then(setKb);
     setReduceMotion(matchMedia("(prefers-reduced-motion: reduce)").matches);
     setCoarse(matchMedia("(pointer: coarse)").matches);
     const css = getComputedStyle(document.documentElement);
@@ -167,7 +176,7 @@ export default function Cosmos3D({ preview = false, offsetRight = 0, onPick }: {
   // ── nodes and links, at their precomputed places ──
   const nodeCache = useRef(new Map<string, N>());
   const base = useMemo(() => {
-    if (!graph?.layout3d) return null;
+    if (!graph || !layout) return null;
     const deg = new Map<string, number>();
     for (const e of graph.edges) {
       if (STRUCT.has(e.type)) continue;
@@ -175,10 +184,10 @@ export default function Cosmos3D({ preview = false, offsetRight = 0, onPick }: {
       deg.set(e.t, (deg.get(e.t) ?? 0) + 1);
     }
     let maxDeg = 1;
-    for (const n of graph.nodes) if (n.type !== "Verse" && n.type !== "Upanishad") maxDeg = Math.max(maxDeg, deg.get(n.id) ?? 0);
+    for (const n of graph.nodes) if (n.type !== "Verse" && n.type !== "Upanishad" && n.type !== "Veda" && n.type !== "Stem") maxDeg = Math.max(maxDeg, deg.get(n.id) ?? 0);
     const nodes: N[] = [];
     for (const d of graph.nodes) {
-      const p = graph.layout3d[d.id];
+      const p = layout[d.id];
       if (!p) continue;
       let n = nodeCache.current.get(d.id);
       if (!n) {
@@ -191,13 +200,14 @@ export default function Cosmos3D({ preview = false, offsetRight = 0, onPick }: {
       nodes.push(n);
     }
     const links: LinkRec[] = graph.edges.map((e) => ({ key: ekey(e), type: e.type, s: e.s, t: e.t }));
+    const drawn = links.filter((l) => !HIDDEN_LINKS.has(l.type));
     const adj = new Map<string, { to: string; key: string }[]>();
     for (const l of links) {
       (adj.get(l.s) ?? adj.set(l.s, []).get(l.s)!).push({ to: l.t, key: l.key });
       (adj.get(l.t) ?? adj.set(l.t, []).get(l.t)!).push({ to: l.s, key: l.key });
     }
-    return { nodes, links, adj, maxDeg };
-  }, [graph]);
+    return { nodes, links: drawn, adj, maxDeg };
+  }, [graph, layout]);
 
   const data = useMemo(() => {
     if (!base) return { nodes: [] as N[], links: [] as LinkRec[] };
@@ -207,6 +217,7 @@ export default function Cosmos3D({ preview = false, offsetRight = 0, onPick }: {
 
   // ── emphasis: an answer's subgraph > hover neighbourhood > selection neighbourhood ──
   const emphasis = useMemo((): Emphasis | null => {
+    if (path?.nodes.length) return { nodes: new Set(path.nodes), edges: new Set(path.edges.map(ekey)), kind: "answer" };
     if (highlight?.nodes.length) return { nodes: new Set(highlight.nodes), edges: new Set(highlight.edges.map(ekey)), kind: "answer" };
     const f = hoverId ?? selected;
     if (f && base?.adj.has(f)) {
@@ -218,8 +229,19 @@ export default function Cosmos3D({ preview = false, offsetRight = 0, onPick }: {
       }
       return { nodes, edges, kind: "focus" };
     }
+    if (roots && base) {
+      const nodes = new Set<string>();
+      const edges = new Set<string>();
+      for (const l of base.links) {
+        if (!ROOT_RELS.has(l.type)) continue;
+        nodes.add(l.s);
+        nodes.add(l.t);
+        edges.add(l.key);
+      }
+      return { nodes, edges, kind: "focus" };
+    }
     return null;
-  }, [highlight, hoverId, selected, base]);
+  }, [highlight, hoverId, selected, base, roots, path]);
 
   // ── materials ──
   const materials = useRef(new Map<string, THREE.Material>());
@@ -256,19 +278,19 @@ export default function Cosmos3D({ preview = false, offsetRight = 0, onPick }: {
       const group = new THREE.Group();
       let mesh: THREE.Mesh | null = null;
       {
-        mesh = new THREE.Mesh(geo(n.t === "Story" ? "oct" : n.t === "Verse" ? "lo" : n.t === "Upanishad" ? "hi" : "mid"), material(color, "base"));
+        mesh = new THREE.Mesh(geo(n.t === "Story" ? "oct" : n.t === "Verse" || n.t === "Stem" ? "lo" : n.t === "Upanishad" || n.t === "Veda" ? "hi" : "mid"), material(color, "base"));
         mesh.scale.setScalar(n.t === "Dilemma" ? r * 0.4 : r);
         if (n.t === "Story") mesh.rotation.set(0.3, 0.6, 0);
         group.add(mesh);
       }
       // a soft light around every point (additive in the dark; a faint wash in the light theme)
-      const haloOp = n.t === "Upanishad" ? 0.62 : n.t === "Axis" ? 0.5 : n.t === "Verse" ? 0.16 : n.t === "Concept" ? 0.32 : 0.24;
+      const haloOp = n.t === "Upanishad" || n.t === "Veda" ? 0.62 : n.t === "Axis" ? 0.5 : n.t === "Verse" ? 0.16 : n.t === "Concept" ? 0.32 : 0.24;
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow(), color, transparent: true, depthWrite: false, blending: dark ? THREE.AdditiveBlending : THREE.NormalBlending, opacity: dark ? haloOp : haloOp * 0.3 }));
-      const hs = n.t === "Upanishad" ? r * 7.5 : n.t === "Verse" ? r * 5.5 : r * 5.2;
+      const hs = n.t === "Upanishad" || n.t === "Veda" ? r * 7.5 : n.t === "Verse" ? r * 5.5 : r * 5.2;
       halo.scale.set(hs, hs, 1);
       group.add(halo);
       let ringS: THREE.Sprite | null = null;
-      if (n.t === "Upanishad" || n.t === "Axis" || n.t === "Dilemma" || n.t === "External") {
+      if (n.t === "Upanishad" || n.t === "Veda" || n.t === "Axis" || n.t === "Dilemma" || n.t === "External") {
         const w = n.t === "Dilemma" ? 0.2 : n.t === "Axis" ? 0.12 : 0.06;
         ringS = new THREE.Sprite(new THREE.SpriteMaterial({ map: ring(w), color, transparent: true, depthWrite: false, opacity: n.t === "Dilemma" ? 0.95 : 0.6 }));
         const s = n.t === "Dilemma" ? r * 2.3 : n.t === "Upanishad" ? r * 3.4 : r * 3;
@@ -285,7 +307,7 @@ export default function Cosmos3D({ preview = false, offsetRight = 0, onPick }: {
       } else {
         specs.push({ text: n.d.label, size: 4.4, color: dark ? "#eef0ea" : "#1b1d1a", weight: "600", font: "sans", y: r + 4.5 });
       }
-      const always = n.t === "Upanishad" || n.t === "Axis";
+      const always = n.t === "Upanishad" || n.t === "Veda" || n.t === "Axis";
       const v: Vis = { group, mesh, halo, haloOp, ringS, labels: [], specs, t: n.t, color, r, op: 0, always };
       visuals.current.set(n.id, v);
       live.current.dirty = true;

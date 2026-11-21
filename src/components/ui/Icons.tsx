@@ -32,6 +32,15 @@ export const IconLayers = ({ size, className }: P) => (<svg {...base(size)} clas
 export const IconTerminal = ({ size, className }: P) => (<svg {...base(size)} className={className}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 9l3 3-3 3M12 15h5" /></svg>);
 export const IconCopy = ({ size, className }: P) => (<svg {...base(size)} className={className}><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>);
 export const IconFile = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z" /><path d="M14 3v5h5" /></svg>);
+export const IconHome = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M3 11l9-7 9 7" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></svg>);
+export const IconMap = ({ size, className }: P) => (<svg {...base(size)} className={className}><circle cx="5" cy="6" r="2.2" /><circle cx="19" cy="6" r="2.2" /><circle cx="12" cy="18" r="2.2" /><path d="M7 7l3.8 9M17 7l-3.8 9M7.2 6h9.6" /></svg>);
+export const IconBookmark = ({ size, className, filled }: P & { filled?: boolean }) => (<svg {...base(size)} className={className}><path d="M6 3h12v18l-6-4.5L6 21z" fill={filled ? "currentColor" : "none"} /></svg>);
+export const IconShare = ({ size, className }: P) => (<svg {...base(size)} className={className}><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="6" r="2.5" /><circle cx="18" cy="18" r="2.5" /><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6" /></svg>);
+export const IconLoop = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M17 2l3 3-3 3" /><path d="M4 11V9a4 4 0 0 1 4-4h12" /><path d="M7 22l-3-3 3-3" /><path d="M20 13v2a4 4 0 0 1-4 4H4" /></svg>);
+export const IconNext = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M6 5l10 7-10 7z" fill="currentColor" stroke="none" /><path d="M18 5v14" /></svg>);
+export const IconPrev = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M18 5L8 12l10 7z" fill="currentColor" stroke="none" /><path d="M6 5v14" /></svg>);
+export const IconNote = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M4 20l4-1 11-11-3-3L5 16z" /><path d="M14 6l3 3" /></svg>);
+export const IconInfo = ({ size, className }: P) => (<svg {...base(size)} className={className}><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7.5v.01" /></svg>);
 
 /** The brand mark: a chariot wheel (the Kaṭha's chariot) with the self at its hub. */
 export const Mark = ({ size = 26, className }: P) => (

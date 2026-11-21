@@ -1,83 +1,176 @@
-// npm run runs:record — run every rubric preset through the full harness and save the replayable records.
-//   GROQ_API_KEY=… npm run runs:record            all presets
-//   GROQ_API_KEY=… npm run runs:record unicorn     one preset
-// Baseline and re-aligned answers use the same model; the judge uses a different one. The Scripture Quote baseline
-// is the genuine Phase 0 recording (see BASELINE_FROM below); every other answer is generated in this run.
+// npm run runs:record — the three-way benchmark: every preset × every model × N samples, recorded as replayable runs.
+//   GROQ_API_KEY=… npm run runs:record                     everything still missing (resumes after an interruption)
+//   GROQ_API_KEY=… npm run runs:record -- --samples 1       fewer samples
+//   GROQ_API_KEY=… npm run runs:record -- --only pushback   one preset
+//   GROQ_API_KEY=… npm run runs:record -- --fresh           re-record even what exists
+// Each model is judged by a different model. Conditions run one after another (gentle on per-minute token limits);
+// per-minute limits are waited out; a daily limit stops cleanly and the next run resumes where this one stopped.
+// The Scripture Quote hero keeps its genuine Phase 0 baseline (gpt-oss-20b, sample 1), with provenance.
 import { mkdir, readFile, writeFile, readdir, access } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createEngine } from "../src/lib/core/engine.ts";
 import { corpusIndex } from "../src/lib/core/checks.ts";
 import { runHarness } from "../src/lib/core/pipeline.ts";
-import { nodeTransport } from "./lib/node-transport.mjs";
+import { SIDES } from "../src/lib/core/judge.ts";
+import { complete } from "../src/lib/core/complete.ts";
+import { LlmError } from "../src/lib/core/llm.ts";
+import { loadData } from "./lib/load-data.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const D = join(ROOT, "public", "data");
-const read = async (f) => JSON.parse(await readFile(join(D, f), "utf8"));
-const [kb, graph, rubric, facts] = await Promise.all([read("kb.json"), read("graph.json"), read("rubric.json"), read("facts.json")]);
+const RUNS = join(ROOT, "public", "data", "runs");
+const args = process.argv.slice(2);
+const flag = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
+const SAMPLES = Number(flag("samples", "3"));
+const ONLY = flag("only", null);
+const FRESH = args.includes("--fresh");
+export const BENCH = [
+  { provider: "groq", model: "openai/gpt-oss-20b", judgeProvider: "groq", judgeModel: "openai/gpt-oss-120b" },
+  { provider: "groq", model: "qwen/qwen3.8-27b", judgeProvider: "groq", judgeModel: "openai/gpt-oss-120b" },
+  { provider: "groq", model: "openai/gpt-oss-120b", judgeProvider: "groq", judgeModel: "qwen/qwen3.8-27b" },
+];
+const slug = (m) => m.split("/").pop().replace(/[^a-z0-9.]+/gi, "-").toLowerCase();
+export const runId = (preset, model, sample) => `${preset}--${slug(model)}--s${sample}`;
+const HERO = runId("scripture-quote", BENCH[0].model, 1);
+
+const { kb, graph, rubric, facts } = await loadData(ROOT);
 const E = createEngine(kb, graph, rubric);
 const ci = corpusIndex(kb);
-const models = { provider: "groq", model: rubric.defaults.model, judgeProvider: "groq", judgeModel: rubric.defaults.judgeModel };
-const transport = nodeTransport({ groq: process.env.GROQ_API_KEY?.trim(), openrouter: process.env.OPENROUTER_API_KEY?.trim() }, {
-  onWait: (ms, m) => console.log(`  … rate-limited on ${m}, waiting ${(ms / 1000).toFixed(1)} s`),
-});
+const key = process.env.GROQ_API_KEY?.trim();
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const exists = (p) => access(p).then(() => true, () => false);
+
+// Groq's free tier allows 8,000 tokens a minute per model: wait out per-minute limits patiently.
+// With --patient, a daily (token-bucket) limit that names a short wait ("try again in 9m39s") is waited out too,
+// so a long background pass keeps creeping forward as the bucket refills.
+const PATIENT = args.includes("--patient");
+let dailyWaits = 0;
+const dailyWaitMs = (msg) => {
+  const m = /try again in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)s/i.exec(msg || "");
+  return m ? ((Number(m[1] || 0) * 60 + Number(m[2] || 0)) * 60 + Number(m[3] || 0)) * 1000 : null;
+};
+const transport = {
+  async complete(req, onToken) {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await complete(req, { key, onToken });
+      } catch (e) {
+        const wait = e instanceof LlmError && e.code === "rate-daily" && PATIENT ? dailyWaitMs(e.message) : null;
+        if (wait !== null && wait <= 40 * 60_000 && dailyWaits < 200) {
+          dailyWaits++;
+          process.stdout.write(`    … ${req.model} daily bucket empty, waiting ${(wait / 60000).toFixed(1)} min for it to refill\n`);
+          await sleep(wait + 15_000);
+          attempt = -1;
+          continue;
+        }
+        if (e instanceof LlmError && e.code === "rate-minute" && attempt < 12) {
+          const ms = Math.min(90_000, Math.max(e.retryAfterMs ?? 0, 4000 * (attempt + 1)));
+          process.stdout.write(`    … ${req.model} rate-limited, waiting ${(ms / 1000).toFixed(0)} s\n`);
+          await sleep(ms);
+          continue;
+        }
+        throw e;
+      }
+    }
+  },
+};
 
 // The hero's baseline: the real gpt-oss-20b answer captured in Phase 0 (one of two samples; the other was truthful).
-const BASELINE_FROM = process.env.PHASE0_RUNS || join(ROOT, "..", "phase0", "runs");
-async function phase0Baseline(presetId, model) {
-  try {
-    await access(BASELINE_FROM);
-  } catch {
-    return null;
-  }
-  for (const f of (await readdir(BASELINE_FROM)).filter((x) => x.startsWith("baseline-groq-")).sort()) {
-    const runs = JSON.parse(await readFile(join(BASELINE_FROM, f), "utf8"));
-    const same = runs.filter((r) => r.preset === presetId && r.model === model && r.text);
+const PHASE0 = process.env.PHASE0_RUNS || join(ROOT, "..", "phase0", "runs");
+async function phase0Baseline() {
+  if (!(await exists(PHASE0))) return null;
+  for (const f of (await readdir(PHASE0)).filter((x) => x.startsWith("baseline-groq-")).sort()) {
+    const runs = JSON.parse(await readFile(join(PHASE0, f), "utf8"));
+    const same = runs.filter((r) => r.preset === "scripture-quote" && r.model === BENCH[0].model && r.text);
     const fabricated = same.find((r) => /[ऀ-ॿ]/.test(r.text) && r.text.length < 300);
-    if (fabricated) return { text: fabricated.text, model, ms: fabricated.ms, finish: fabricated.finish, provenance: `Recorded ${fabricated.at.slice(0, 10)} during Phase 0 testing: sample ${fabricated.sample} of ${same.length} with the same neutral prompt. The other sample${same.length > 2 ? "s" : ""} answered truthfully.` };
+    if (fabricated) return { text: fabricated.text, model: BENCH[0].model, ms: fabricated.ms, finish: fabricated.finish, provenance: `Recorded ${fabricated.at.slice(0, 10)} during Phase 0 testing: sample ${fabricated.sample} of ${same.length} with the same neutral prompt. The other sample${same.length > 2 ? "s" : ""} answered truthfully.` };
   }
   return null;
 }
-
-// Re-recording keeps an earlier genuine baseline (same model, same neutral prompt) unless --fresh is passed, so that
-// improving the re-aligned stage or the judge does not silently swap the answer being judged.
-async function earlierBaseline(presetId) {
+// If Phase 0 is not on this machine, keep the hero baseline already recorded (same model, same neutral prompt).
+async function storedHeroBaseline() {
   try {
-    const prev = JSON.parse(await readFile(join(D, "runs", `${presetId}.json`), "utf8"));
-    if (!prev.baseline?.text || prev.baseline.error || prev.models?.model !== models.model || prev.prompt !== rubric.presets.find((p) => p.id === presetId)?.prompt) return null;
-    return { ...prev.baseline, provenance: prev.baseline.provenance || `Recorded ${prev.createdAt.slice(0, 10)} in an earlier recording pass (same model, same neutral prompt).` };
+    const prev = JSON.parse(await readFile(join(RUNS, `${HERO}.json`), "utf8"));
+    return prev.baseline?.provenance ? prev.baseline : null;
   } catch {
-    return null;
+    try {
+      const v1 = JSON.parse(await readFile(join(RUNS, "scripture-quote.json"), "utf8"));
+      return v1.baseline?.text ? { ...v1.baseline, provenance: v1.baseline.provenance || "Recorded in an earlier pass with the same model and neutral prompt." } : null;
+    } catch {
+      return null;
+    }
   }
 }
 
-const args = process.argv.slice(2);
-const fresh = args.includes("--fresh");
-const only = args.filter((a) => !a.startsWith("--"));
-const presets = rubric.presets.filter((p) => !only.length || only.includes(p.id));
-await mkdir(join(D, "runs"), { recursive: true });
-for (const p of presets) {
-  // The hero baseline is never regenerated: Phase 0 recording if present, else the stored one (provenance kept).
-  const fixed = (p.id === "scripture-quote" ? (await phase0Baseline("scripture-quote", models.model)) ?? (await earlierBaseline(p.id)) : null) ?? (fresh ? null : await earlierBaseline(p.id));
-  console.log(`▶ ${p.id}${fixed ? ` (baseline reused: ${fixed.provenance})` : ""}`);
-  const run = await runHarness(E, ci, transport, models, p.prompt, { preset: p, baseline: fixed ?? undefined, corpusHash: facts.corpusHash });
-  await writeFile(join(D, "runs", `${p.id}.json`), JSON.stringify(run, null, 1), "utf8");
-  const j = run.judge;
-  console.log(`  ${run.status} · baseline ${run.baseline.text.length} chars${run.baseline.error ? ` (ERROR ${run.baseline.error.code})` : ""} · re-aligned ${run.realigned.text.length} chars, ${run.realigned.citations.length} citations${run.realigned.stripped.length ? `, ${run.realigned.stripped.length} stripped` : ""}${run.realigned.repaired ? ", repaired" : ""}`);
-  console.log(`  checks: baseline ${run.checks.baseline.unverifiedQuotes} unverified quote(s), opener ${run.checks.baseline.flatteryOpener ?? "–"}, bait ${run.checks.baseline.engagementBait ? "yes" : "no"}`);
-  console.log(`  judge: ${j.status}${j.status === "ok" ? ` · baseline ${j.totals.baseline}/${j.max} vs re-aligned ${j.totals.realigned}/${j.max} (${j.comparableAxes} comparable axes) · verdict ${j.verdict} · ${j.rejectedEvidence} evidence rejected` : ` · ${j.error}`}`);
-  console.log(`  re-aligned bait: ${run.checks.realigned.engagementBait ? "STILL PRESENT" : "none"} · English quotes ${run.checks.realigned.englishQuotes.map((q) => (q.found ? "✓" : "✗")).join("") || "–"}`);
-  await new Promise((r) => setTimeout(r, 4000));
+async function writeIndex() {
+  const files = (await readdir(RUNS)).filter((f) => f.endsWith(".json") && f !== "index.json");
+  const runs = [];
+  for (const f of files) {
+    const r = JSON.parse(await readFile(join(RUNS, f), "utf8"));
+    if (r.v !== 2) continue;
+    runs.push({
+      id: r.id, preset: r.preset, title: r.title, hook: r.hook, prompt: r.prompt, followUp: r.followUp, control: r.control, sharpened: r.sharpened,
+      sample: r.sample, createdAt: r.createdAt, status: r.status, models: r.models, verdict: r.judge.verdict,
+      totals: r.judge.totals, max: r.judge.max, comparableAxes: r.judge.comparableAxes, dilemma: r.diagnosis.dilemmas[0]?.id ?? null, tokens: r.tokens,
+      ms: { baseline: r.baseline?.ms ?? null, control: r.control_?.ms ?? null, realigned: r.realigned?.ms ?? null, judge: r.judge?.ms ?? null },
+      scores: Object.fromEntries(rubric.axes.map((a) => [a.id, Object.fromEntries(SIDES.map((s) => [s, r.judge.scores?.[a.id]?.[s]?.score ?? null]))])),
+    });
+  }
+  runs.sort((a, b) => a.id.localeCompare(b.id));
+  await writeFile(join(RUNS, "index.json"), JSON.stringify({ v: 2, hero: HERO, bench: BENCH, samples: SAMPLES, runs }, null, 1));
+  return runs.length;
 }
 
-// index for the run list
-const files = (await readdir(join(D, "runs"))).filter((f) => f.endsWith(".json") && f !== "index.json");
-const index = [];
-for (const f of files) {
-  const r = JSON.parse(await readFile(join(D, "runs", f), "utf8"));
-  index.push({ id: r.id, title: r.title, hook: r.hook, prompt: r.prompt, control: r.control, sharpened: r.sharpened, createdAt: r.createdAt, status: r.status, models: r.models, totals: r.judge.totals, max: r.judge.max, comparableAxes: r.judge.comparableAxes, verdict: r.judge.verdict, dilemma: r.diagnosis.dilemmas[0]?.id ?? null });
+if (!key) {
+  console.log("GROQ_API_KEY is not set: rebuilding runs/index.json only.");
+  console.log(`${await writeIndex()} runs indexed`);
+  process.exit(0);
 }
-const order = rubric.presets.map((p) => p.id);
-index.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-await writeFile(join(D, "runs", "index.json"), JSON.stringify(index, null, 1), "utf8");
-console.log(`index: ${index.length} runs`);
+await mkdir(RUNS, { recursive: true });
+const presets = rubric.presets.filter((p) => !ONLY || p.id === ONLY);
+const heroBaseline = (await phase0Baseline()) ?? (await storedHeroBaseline());
+const totals = { in: 0, out: 0, runs: 0, ms: 0 };
+let stopped = null;
+outer: for (let sample = 1; sample <= SAMPLES; sample++) {
+  for (const p of presets) {
+    for (const m of BENCH) {
+      const id = runId(p.id, m.model, sample);
+      const file = join(RUNS, `${id}.json`);
+      if (!FRESH && (await exists(file))) {
+        try {
+          const prev = JSON.parse(await readFile(file, "utf8"));
+          if (prev.v === 2 && prev.status === "complete") continue;
+        } catch {}
+      }
+      const t0 = Date.now();
+      console.log(`▸ ${id}`);
+      try {
+        const run = await runHarness(E, ci, transport, m, p.prompt, {
+          preset: p,
+          sample,
+          sequential: true,
+          maxTokens: 1500,
+          corpusHash: facts.corpusHash,
+          baseline: id === HERO && heroBaseline ? heroBaseline : undefined,
+        });
+        run.id = id;
+        await writeFile(file, JSON.stringify(run, null, 1));
+        const j = run.judge;
+        totals.in += run.tokens.in;
+        totals.out += run.tokens.out;
+        totals.runs++;
+        totals.ms += Date.now() - t0;
+        console.log(`  ${run.status} · judge ${j.status} · ${SIDES.map((s) => `${s} ${j.totals?.[s] ?? "–"}`).join(" · ")} / ${j.max} · ${run.tokens.in + run.tokens.out} tokens · ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+        const fail = SIDES.map((s) => (s === "control" ? run.control_ : run[s])).find((x) => x.error?.code === "rate-daily") || (j.error && /per day|daily/i.test(j.error) ? { error: { message: j.error } } : null);
+        if (fail) { stopped = fail.error.message; break outer; }
+      } catch (e) {
+        if (e instanceof LlmError && e.code === "rate-daily") { stopped = e.message; break outer; }
+        console.log(`  failed: ${e.message}`);
+      }
+      await writeIndex();
+    }
+  }
+}
+const n = await writeIndex();
+console.log(`\n${totals.runs} run(s) recorded this pass · ${totals.in + totals.out} tokens (${totals.in} in, ${totals.out} out) · ${(totals.ms / 60000).toFixed(1)} min · ${n} runs indexed`);
+if (stopped) console.log(`Stopped on a daily limit: ${stopped}\nRun again later; recording resumes where it stopped.`);

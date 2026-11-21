@@ -9,6 +9,6 @@ import { read } from "./helpers.ts";
 test("all recorded runs verify, including the hero contract", async () => {
   const { errors, summary } = (await verifyRuns(join(import.meta.dirname, ".."))) as { errors: string[]; summary: unknown[] };
   assert.deepEqual(errors, []);
-  assert.equal(summary.length, read<unknown[]>("runs/index.json").length);
+  assert.equal(summary.length, read<{ runs: unknown[] }>("runs/index.json").runs.length);
   assert.ok(summary.length >= 6);
 });

@@ -1,25 +1,29 @@
 "use client";
-// Explore: the cosmos fills the screen; a glass dock on the right holds what is selected and the conversation.
+// The Map: Veda → Upanishad → mantra. The default view is a crisp, keyboard-navigable focus subgraph (≤15 nodes);
+// the whole map (2D, grouped by Veda) and the 3D cosmos are optional views. A glass dock on the right holds what is
+// selected, the path finder and the conversation.
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { askStore, useAsk, type AskMessage } from "@/lib/client/ask-store";
 import { explore, useExplore } from "@/lib/client/explore-store";
-import { useData } from "@/lib/client/data";
-import type { GraphData, KnowledgeBase, NodeType } from "@/lib/core/types";
+import { loadGraph, loadIndex, useAsync } from "@/lib/client/data";
+import type { GraphData, KbIndex, NodeType } from "@/lib/core/types";
+import { PathPanel } from "./PathPanel";
 import { AskPanel } from "@/components/ask/AskPanel";
 import { SUGGESTIONS } from "@/components/ask/suggestions";
 import { SourceBody } from "@/components/verse/Drawer";
 import { TEXT_HEX, TYPE_HEX, TYPE_LABEL, TYPE_ORDER, nodeColor } from "./palette";
 import { useTheme } from "@/lib/client/theme";
-import { IconChat, IconClose, IconEye, IconEyeOff, IconFit, IconLayers, IconMinus, IconOrbit, IconPause, IconPlay, IconPlus, IconReplay, IconSend } from "@/components/ui/Icons";
+import { IconBack, IconChat, IconClose, IconEye, IconEyeOff, IconFit, IconLayers, IconMap, IconMinus, IconOrbit, IconPause, IconPlay, IconPlus, IconReplay, IconRoute, IconSend } from "@/components/ui/Icons";
 
 const Cosmos3D = dynamic(() => import("./Cosmos3D"), { ssr: false, loading: () => <Loading /> });
 const Cosmos2D = dynamic(() => import("./Cosmos2D"), { ssr: false, loading: () => <Loading /> });
+const FocusGraph = dynamic(() => import("./FocusGraph"), { ssr: false, loading: () => <Loading /> });
 
 function Loading() {
   return (
     <div className="absolute inset-0 grid place-items-center">
-      <p className="thinking text-[14px] text-text-3">Gathering the cosmos</p>
+      <p className="thinking text-[14px] text-text-3">Gathering the map</p>
     </div>
   );
 }
@@ -43,8 +47,8 @@ export function ExploreApp() {
   const ask = useAsk();
   const wide = useWide();
   const dark = useTheme() === "dark";
-  const { data: graph } = useData<GraphData>("graph.json");
-  const { data: kb } = useData<KnowledgeBase>("kb.json");
+  const graph = useAsync<GraphData>(loadGraph, []);
+  const kb = useAsync<KbIndex>(loadIndex, []);
   const [legendOpen, setLegendOpen] = useState(true);
 
   // Deep links: ?node=<id> selects and flies; ?q=<question> asks.
@@ -52,6 +56,9 @@ export function ExploreApp() {
     const q = new URLSearchParams(location.search);
     const node = q.get("node");
     const question = q.get("q");
+    const view = q.get("view");
+    if (view === "3d" || view === "2d" || view === "focus") explore.setView(view);
+    if (q.get("roots") === "1") explore.setRoots(true);
     if (node) explore.select(node);
     if (question) {
       explore.setDock("ask");
@@ -86,37 +93,66 @@ export function ExploreApp() {
             ? `Tell me the story of ${n.label} and what it teaches.`
             : n.type === "Upanishad"
               ? `What is the ${n.label} Upanishad about, and where should I begin?`
-              : `What do the Upanishads teach about ${n.label}?`;
+              : n.type === "Veda"
+                ? `What is the essence of the ${n.label}, and how do its Upanishads distil it?`
+                : n.type === "Stem"
+                  ? `What does the word ${n.label} mean across the Upanishads?`
+                  : `What do the Upanishads teach about ${n.label}?`;
     explore.setDock("ask");
     askStore.ask(q);
   };
 
   return (
     <div className="explore-root relative overflow-hidden" style={{ height: "calc(100dvh - var(--nav-h))" }}>
-      {st.view === "3d" ? <Cosmos3D offsetRight={offset} /> : <Cosmos2D offsetRight={offset} />}
+      {st.view === "3d" ? (
+        <Cosmos3D offsetRight={offset} />
+      ) : st.view === "2d" ? (
+        <Cosmos2D offsetRight={offset} />
+      ) : graph && kb ? (
+        <div className="absolute inset-y-0 left-0" style={{ right: offset }}>
+          <FocusGraph graph={graph} ix={kb} />
+        </div>
+      ) : (
+        <Loading />
+      )}
 
       {/* ── top-left: title and view controls ── */}
       <div className="pointer-events-none absolute left-3 top-3 z-10 flex max-w-[calc(100vw-24px)] flex-col gap-2 sm:left-5 sm:top-5">
         <div className="glass pointer-events-auto px-4 py-3.5 sm:px-5">
-          <p className="eyebrow !text-[10.5px]">The cosmos</p>
-          <h1 className="display mt-0.5 text-[21px] sm:text-[24px]">Nine Upanishads, one graph</h1>
+          <p className="eyebrow !text-[10.5px]">The map · Veda → Upanishad → mantra</p>
+          <h1 className="display mt-0.5 text-[21px] sm:text-[24px]">{st.view === "focus" && selectedNode ? selectedNode.label : "Five Vedas, thirteen Upanishads"}</h1>
           <p className="mt-1 hidden text-[12.5px] text-text-3 sm:block">
-            {graph ? `${counts.Verse} mantras · ${counts.Concept} concepts · ${counts.Dilemma} human situations · ${counts.Story} stories · ${graph.edges.length} links` : "Loading…"}
+            {graph ? `${counts.Verse} passages · ${counts.Concept} concepts · ${counts.Story} stories · ${counts.Stem} key words · ${graph.edges.length.toLocaleString()} links` : "Loading…"}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <div className="seg !rounded-[10px] !p-[2px]">
-              <button aria-pressed={st.view === "3d"} onClick={() => explore.setView("3d")} className="!h-8 !px-3 !text-[13px]">
+            <div className="seg !rounded-[10px] !p-[2px]" role="group" aria-label="View">
+              <button aria-pressed={st.view === "focus"} onClick={() => explore.setView("focus")} className="!h-8 !px-3 !text-[13px]" title="One idea and its closest links (keyboard-friendly)">
+                <IconMap size={14} /> Focus
+              </button>
+              <button aria-pressed={st.view === "2d"} onClick={() => explore.setView("2d")} className="!h-8 !px-3 !text-[13px]" title="Everything, grouped by Veda">
+                <IconLayers size={14} /> Whole map
+              </button>
+              <button aria-pressed={st.view === "3d"} onClick={() => explore.setView("3d")} className="!h-8 !px-3 !text-[13px]" title="The 3D cosmos (needs WebGL)">
                 <IconOrbit size={14} /> 3D
               </button>
-              <button aria-pressed={st.view === "2d"} onClick={() => explore.setView("2d")} className="!h-8 !px-3 !text-[13px]">
-                <IconLayers size={14} /> Map
-              </button>
             </div>
-            <div className="seg !rounded-[10px] !p-[2px]">
-              <button aria-pressed={st.colorBy === "text"} onClick={() => explore.setColorBy("text")} className="!h-8 !px-3 !text-[13px]">By text</button>
-              <button aria-pressed={st.colorBy === "type"} onClick={() => explore.setColorBy("type")} className="!h-8 !px-3 !text-[13px]">By kind</button>
-            </div>
+            <button className={`btn btn-sm !h-8 ${st.roots ? "btn-accent" : ""}`} aria-pressed={st.roots} onClick={() => explore.setRoots(!st.roots)} title="Show how each Upanishad distils its Veda, and the Saṃhitā mantras it takes up">
+              Vedic Roots (Sāra)
+            </button>
+            {st.view !== "focus" && (
+              <div className="seg !rounded-[10px] !p-[2px]">
+                <button aria-pressed={st.colorBy === "text"} onClick={() => explore.setColorBy("text")} className="!h-8 !px-3 !text-[13px]">By text</button>
+                <button aria-pressed={st.colorBy === "type"} onClick={() => explore.setColorBy("type")} className="!h-8 !px-3 !text-[13px]">By kind</button>
+              </div>
+            )}
           </div>
+          {st.view === "focus" && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              <button className="btn btn-ghost btn-sm !h-7" disabled={!st.trail.length} onClick={explore.back} aria-label="Back"><IconBack size={13} /> Back</button>
+              <button className="btn btn-ghost btn-sm !h-7" disabled={!st.selected} onClick={explore.home}>Root map</button>
+              <button className="btn btn-ghost btn-sm !h-7" onClick={() => explore.setDock("path")}><IconRoute size={13} /> Find a path</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -136,7 +172,7 @@ export function ExploreApp() {
       )}
 
       {/* ── camera ── */}
-      <div className="absolute top-1/2 z-10 hidden -translate-y-1/2 flex-col gap-1 sm:flex" style={{ right: offset + 16 }}>
+      <div className={`absolute top-1/2 z-10 hidden -translate-y-1/2 flex-col gap-1 ${st.view === "focus" ? "" : "sm:flex"}`} style={{ right: offset + 16 }}>
         <div className="glass flex flex-col p-1 !rounded-xl">
           <button className="btn btn-ghost btn-icon" onClick={() => explore.camera("zoomIn")} aria-label="Zoom in" title="Zoom in"><IconPlus size={17} /></button>
           <button className="btn btn-ghost btn-icon" onClick={() => explore.camera("zoomOut")} aria-label="Zoom out" title="Zoom out"><IconMinus size={17} /></button>
@@ -151,7 +187,7 @@ export function ExploreApp() {
       </div>
 
       {/* ── legend ── */}
-      <div className="absolute bottom-3 left-3 z-10 hidden sm:bottom-5 sm:left-5 sm:block">
+      <div className={`absolute bottom-3 left-3 z-10 hidden sm:bottom-5 sm:left-5 ${st.view === "focus" ? "" : "sm:block"}`}>
         {legendOpen ? (
           <div className="glass reveal w-[262px] px-3.5 py-3">
             <div className="mb-1.5 flex items-center justify-between">
@@ -186,7 +222,7 @@ export function ExploreApp() {
                 </div>
               </>
             )}
-            <p className="mt-3 border-t border-line pt-2 text-[11.5px] leading-snug text-text-4">Drag to orbit · scroll to zoom · click a point to open it</p>
+            <p className="mt-3 border-t border-line pt-2 text-[11.5px] leading-snug text-text-4">{st.view === "3d" ? "Drag to orbit" : "Drag to pan"} · scroll to zoom · click a point to open it</p>
           </div>
         ) : (
           <button className="glass btn !h-10 !rounded-xl" onClick={() => setLegendOpen(true)}>
@@ -196,14 +232,15 @@ export function ExploreApp() {
       </div>
 
       {/* ── ask bar (when the conversation is not open) ── */}
-      {st.dock !== "ask" && <AskBar left={wide && legendOpen ? 300 : 0} right={offset + (wide ? 72 : 0)} hasMessages={ask.messages.length > 0} />}
+      {st.dock !== "ask" && <AskBar left={wide && legendOpen && st.view !== "focus" ? 300 : 0} right={offset + (wide ? 72 : 0)} hasMessages={ask.messages.length > 0} />}
 
       {/* ── dock ── */}
       {dockOpen && (
-        <aside className={`explore-dock reveal ${wide ? "" : "explore-dock-sheet"}`} style={wide ? { width: DOCK_W } : undefined} aria-label={st.dock === "ask" ? "Conversation" : "Details"}>
+        <aside className={`explore-dock reveal ${wide ? "" : "explore-dock-sheet"}`} style={wide ? { width: DOCK_W } : undefined} aria-label={st.dock === "ask" ? "Conversation" : st.dock === "path" ? "Path finder" : "Details"}>
           <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
             <div className="seg !p-[2px]">
               <button aria-pressed={st.dock === "details"} disabled={!st.selected} onClick={() => explore.setDock("details")} className="!h-8 !text-[13px] disabled:opacity-40">Details</button>
+              <button aria-pressed={st.dock === "path"} onClick={() => explore.setDock("path")} className="!h-8 !text-[13px]"><IconRoute size={14} /> Path</button>
               <button aria-pressed={st.dock === "ask"} onClick={() => explore.setDock("ask")} className="!h-8 !text-[13px]">
                 <IconChat size={14} /> Ask{ask.messages.length ? ` · ${Math.ceil(ask.messages.length / 2)}` : ""}
               </button>
@@ -214,6 +251,8 @@ export function ExploreApp() {
           <div className="min-h-0 flex-1">
             {st.dock === "ask" ? (
               <AskPanel onShowInGraph={showInGraph} inExplore />
+            ) : st.dock === "path" ? (
+              graph ? <PathPanel graph={graph} /> : null
             ) : st.selected && selectedNode ? (
               <div className="scroll-thin h-full overflow-y-auto">
                 <div className="flex items-center gap-2 px-5 pt-4">
@@ -227,7 +266,7 @@ export function ExploreApp() {
                 <SourceBody id={st.selected} onNavigate={(id) => explore.select(id)} inExplore />
               </div>
             ) : (
-              <p className="p-5 text-text-3">Select a point in the cosmos.</p>
+              <p className="p-5 text-text-3">Select a point in the map.</p>
             )}
           </div>
         </aside>
@@ -280,6 +319,8 @@ function Glyph({ type, color }: { type: NodeType; color: string }) {
     <svg width={s} height={s} viewBox="0 0 14 14" aria-hidden className="shrink-0">
       {type === "Upanishad" && (<><circle cx="7" cy="7" r="6" fill="none" stroke={color} strokeWidth="1" opacity=".7" /><circle cx="7" cy="7" r="3.6" fill={color} /></>)}
       {type === "Verse" && <circle cx="7" cy="7" r="2.2" fill={color} />}
+      {type === "Veda" && (<><circle cx="7" cy="7" r="6.2" fill="none" stroke={color} strokeWidth="1" strokeDasharray="2 1.5" /><circle cx="7" cy="7" r="4" fill={color} /></>)}
+      {type === "Stem" && <rect x="4" y="4" width="6" height="6" rx="1.2" fill={color} />}
       {type === "Axis" && (<><circle cx="7" cy="7" r="5.2" fill="none" stroke={color} strokeWidth="1.4" /><circle cx="7" cy="7" r="2.6" fill={color} /></>)}
       {type === "Concept" && <circle cx="7" cy="7" r="4" fill={color} />}
       {type === "Dilemma" && (<><circle cx="7" cy="7" r="4.6" fill="none" stroke={color} strokeWidth="2" /><circle cx="7" cy="7" r="1.6" fill={color} /></>)}

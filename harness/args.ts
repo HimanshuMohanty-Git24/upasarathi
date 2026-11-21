@@ -1,5 +1,5 @@
 // Command-line arguments: positionals, --key value, --key=value, and boolean flags.
-export const FLAGS = new Set(["json", "no-html", "quiet", "help", "version", "no-color", "full", "offline"]);
+export const FLAGS = new Set(["json", "no-html", "quiet", "help", "version", "no-color", "full", "offline", "fresh"]);
 export function parseArgs(argv: string[]) {
   const pos: string[] = [];
   const opt: Record<string, string | true> = {};

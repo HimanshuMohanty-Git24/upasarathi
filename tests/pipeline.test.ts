@@ -1,4 +1,5 @@
-// The whole harness with a scripted transport: no network, every failure path exercised.
+// The whole harness with a scripted transport: no network, every failure path exercised. Three conditions
+// (baseline, honesty control, UpaSārathi) and a blind judge over A, B and C.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { E, ci, rubric } from "./helpers.ts";
@@ -7,50 +8,89 @@ import { LlmError, type LlmRequest } from "../src/lib/core/llm.ts";
 
 const models = { provider: "groq" as const, model: "test-20b", judgeProvider: "groq" as const, judgeModel: "test-120b" };
 const PROMPT = rubric.presets.find((p) => p.id === "scripture-quote")!.prompt;
+const CONTROL_ANSWER = "A plain, honest answer without any quotation.";
 
-function scripted(handlers: { baseline?: () => string; realigned?: (n: number, req: LlmRequest) => string; judge?: (req: LlmRequest) => string }): Transport & { calls: string[] } {
+type Kind = "baseline" | "control" | "realigned" | "judge";
+const kindOf = (req: LlmRequest): Kind =>
+  req.model === models.judgeModel ? "judge" : req.messages[0].content === rubric.baselineSystem ? "baseline" : req.messages[0].content === rubric.controlSystem ? "control" : "realigned";
+
+function scripted(handlers: { baseline?: () => string; control?: () => string; realigned?: (n: number, req: LlmRequest) => string; judge?: (req: LlmRequest) => string }): Transport & { calls: Kind[] } {
   let realignedCalls = 0;
-  const calls: string[] = [];
+  const calls: Kind[] = [];
   return {
     calls,
     async complete(req) {
-      const kind = req.model === models.judgeModel ? "judge" : req.messages[0].content === rubric.baselineSystem ? "baseline" : "realigned";
+      const kind = kindOf(req);
       calls.push(kind);
-      const text = kind === "baseline" ? handlers.baseline!() : kind === "realigned" ? handlers.realigned!(++realignedCalls, req) : handlers.judge!(req);
-      return { text, model: req.model, ms: 5, finish: "stop" };
+      const text =
+        kind === "baseline" ? handlers.baseline!() : kind === "control" ? (handlers.control ?? (() => CONTROL_ANSWER))() : kind === "realigned" ? handlers.realigned!(++realignedCalls, req) : handlers.judge!(req);
+      return { text, model: req.model, ms: 5, finish: "stop", usage: { in: 100, out: 20 } };
     },
   };
 }
-const judgeFor = (req: LlmRequest, pick: (side: "A" | "B") => string) => {
+const LETTERS = ["A", "B", "C"] as const;
+const SCORE = { good: 4, ok: 2, bad: 0 } as const;
+/** A judge that reads the three answers it was shown and scores each by `pick`, quoting it verbatim. */
+function judgeFor(req: LlmRequest, pick: (answer: string) => keyof typeof SCORE) {
   const body = req.messages[1].content;
-  const A = body.split("RESPONSE A:\n<<<")[1].split(">>>")[0];
-  const B = body.split("RESPONSE B:\n<<<")[1].split(">>>")[0];
-  const ev = (t: string) => t.slice(0, 30);
+  const answer = (L: string) => body.split(`RESPONSE ${L}:\n<<<`)[1].split(">>>")[0];
+  const picks = LETTERS.map((L) => pick(answer(L)));
   return JSON.stringify({
-    scores: Object.fromEntries(rubric.axes.map((a) => [a.id, { A: { score: pick("A") === "good" ? 4 : 0, evidence: ev(A) }, B: { score: pick("B") === "good" ? 4 : 0, evidence: ev(B) } }])),
-    verdict: pick("A") === "good" ? "A" : "B",
+    scores: Object.fromEntries(rubric.axes.map((a) => [a.id, Object.fromEntries(LETTERS.map((L, i) => [L, { score: SCORE[picks[i]], evidence: answer(L).slice(0, 30) }]))])),
+    verdict: LETTERS[picks.indexOf("good")] ?? "tie",
     summary: "test",
   });
-};
+}
 
-test("a fabricated baseline, a repaired re-aligned answer and a blind verdict", async () => {
+test("a fabricated baseline, an honest control, a repaired UpaSārathi answer and a blind verdict", async () => {
   const goodAnswer = "There is no such verse. The Kaṭha says the opposite [KaU 1.1.27]: a person is not satisfied by wealth.";
   const t = scripted({
     baseline: () => "रजः धनः सर्वधनानां श्रेष्ठः (कथोपनिषद् ४.११)",
     realigned: (n) => (n === 1 ? "Wealth is not the goal [MaU 7]. Would you like me to find more quotes?" : goodAnswer),
-    judge: (req) => judgeFor(req, (side) => (req.messages[1].content.split(`RESPONSE ${side}:\n<<<`)[1].startsWith("There is no") ? "good" : "bad")),
+    judge: (req) => judgeFor(req, (a) => (a.startsWith("There is no") ? "good" : a.startsWith("A plain") ? "ok" : "bad")),
   });
   const run = await runHarness(E, ci, t, models, PROMPT);
   assert.equal(run.status, "complete");
+  assert.equal(run.v, 2);
   assert.equal(run.checks.baseline.unverifiedQuotes, 1);
+  assert.equal(run.checks.control.unverifiedQuotes, 0);
+  assert.equal(run.control_.text, CONTROL_ANSWER);
   assert.equal(run.realigned.repaired, true);
   assert.equal(run.realigned.text, goodAnswer);
   assert.deepEqual(run.realigned.citations.map((c) => c.id), ["KaU_1.1.27"]);
   assert.equal(run.judge.status, "ok");
   assert.equal(run.judge.verdict, "realigned");
   assert.equal(run.judge.totals.realigned, rubric.axes.length * 4);
+  assert.equal(run.judge.totals.control, rubric.axes.length * 2);
+  assert.equal(run.judge.totals.baseline, 0);
   assert.equal(run.models.sameJudge, false);
-  assert.deepEqual(t.calls.filter((c) => c === "realigned").length, 2);
+  assert.equal(t.calls.filter((c) => c === "realigned").length, 2);
+  assert.equal(t.calls.filter((c) => c === "control").length, 1);
+  // Token accounting: baseline, control, UpaSārathi twice (repair) and the judge, 100 in / 20 out each.
+  assert.deepEqual(run.tokens, { in: 500, out: 100 });
+});
+
+test("the honesty control prompt carries no scripture", () => {
+  assert.doesNotMatch(rubric.controlSystem, /upani|veda|gīt|git[aā]|śaṅkara|shankara|brahman|ātman|atman|sanskrit|scripture/i);
+});
+
+test("a multi-turn preset sends the follow-up to every condition and keeps the first answer", async () => {
+  const preset = rubric.presets.find((p) => p.followUp)!;
+  const seen: Kind[] = [];
+  const t: Transport = {
+    async complete(req) {
+      const kind = kindOf(req);
+      if (kind !== "judge" && req.messages.some((m) => m.role === "user" && m.content === preset.followUp)) seen.push(kind);
+      const first = !req.messages.some((m) => m.role === "assistant");
+      const text = kind === "judge" ? judgeFor(req, () => "ok") : kind === "realigned" ? (first ? "First [KaU 1.2.2]." : "Still no [KaU 1.2.2].") : first ? "First answer." : "Second answer.";
+      return { text, model: req.model, ms: 3, finish: "stop" };
+    },
+  };
+  const run = await runHarness(E, ci, t, models, preset.prompt, { preset });
+  assert.equal(run.followUp, preset.followUp);
+  assert.deepEqual([...new Set(seen)].sort(), ["baseline", "control", "realigned"]);
+  assert.equal(run.baseline.first, "First answer.");
+  assert.equal(run.baseline.text, "Second answer.");
 });
 
 test("citations that survive the repair outside the packet are stripped, not shown", async () => {
@@ -70,6 +110,7 @@ test("a daily quota and an empty answer become explicit stage errors; the judge 
   const run = await runHarness(E, ci, t, models, PROMPT);
   assert.equal(run.status, "partial");
   assert.equal(run.baseline.error?.code, "rate-daily");
+  assert.equal(run.control_.error?.code, "empty");
   assert.equal(run.realigned.error?.code, "empty");
   assert.equal(run.judge.status, "skipped");
 });

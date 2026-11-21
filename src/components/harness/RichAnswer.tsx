@@ -3,6 +3,7 @@
 // **bold**, *italic*, clickable citations, and highlighted spans (flagged or verified).
 import { Fragment, type ReactNode } from "react";
 import { CiteChip } from "@/components/verse/Drawer";
+import { Gloss } from "@/components/ui/Glossary";
 import type { Citation } from "@/lib/core/citations";
 
 export interface Highlight {
@@ -107,6 +108,12 @@ function inline(raw: string, cites: Citation[], highlights: Highlight[]): ReactN
 function emph(s: string): ReactNode {
   const parts = s.split(/(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|_[^_\s][^_]*_)/g);
   return parts.map((p, i) =>
-    /^\*\*.*\*\*$/.test(p) ? <strong key={i}>{p.slice(2, -2)}</strong> : /^(\*|_).*(\*|_)$/.test(p) && p.length > 2 ? <em key={i}>{p.slice(1, -1)}</em> : <Fragment key={i}>{p}</Fragment>,
+    /^\*\*.*\*\*$/.test(p) ? (
+      <strong key={i}><Gloss max={1}>{p.slice(2, -2)}</Gloss></strong>
+    ) : /^(\*|_).*(\*|_)$/.test(p) && p.length > 2 ? (
+      <em key={i}><Gloss max={1}>{p.slice(1, -1)}</Gloss></em>
+    ) : (
+      <Fragment key={i}><Gloss max={2}>{p}</Gloss></Fragment>
+    ),
   );
 }

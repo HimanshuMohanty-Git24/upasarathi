@@ -36,7 +36,7 @@ export function LiveHarness({ presets, axes, corpusSize }: { presets: Preset[]; 
         preset: recorded ? preset ?? undefined : undefined,
         events: {
           onStage: (_st, r) => snapshot(r),
-          onToken: (side, full) => setRun((cur) => (cur ? { ...cur, [side]: { ...cur[side], text: full } } : cur)),
+          onToken: (side, full) => setRun((cur) => { if (!cur) return cur; const k = side === "control" ? "control_" : side; return { ...cur, [k]: { ...cur[k], text: full } }; }),
         },
       });
       setRun({ ...final });

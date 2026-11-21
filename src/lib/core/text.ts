@@ -72,3 +72,42 @@ export function hash(s: string): number {
 
 const DEVA_DIGITS = "०१२३४५६७८९";
 export const devaDigitsToAscii = (s: string) => s.replace(/[०-९]/g, (d) => String(DEVA_DIGITS.indexOf(d)));
+
+// ── Devanagari → IAST (for sources that give only Devanagari, e.g. Sanskrit Wikisource) ──────────────────────
+const D_VOWEL: Record<string, string> = { अ: "a", आ: "ā", इ: "i", ई: "ī", उ: "u", ऊ: "ū", ऋ: "ṛ", ॠ: "ṝ", ऌ: "ḷ", ॡ: "ḹ", ए: "e", ऐ: "ai", ओ: "o", औ: "au" };
+const D_SIGN: Record<string, string> = { "ा": "ā", "ि": "i", "ी": "ī", "ु": "u", "ू": "ū", "ृ": "ṛ", "ॄ": "ṝ", "ॢ": "ḷ", "ॣ": "ḹ", "े": "e", "ै": "ai", "ो": "o", "ौ": "au", "ॆ": "e", "ॊ": "o" };
+const D_CONS: Record<string, string> = {
+  क: "k", ख: "kh", ग: "g", घ: "gh", ङ: "ṅ", च: "c", छ: "ch", ज: "j", झ: "jh", ञ: "ñ", ट: "ṭ", ठ: "ṭh", ड: "ḍ", ढ: "ḍh", ण: "ṇ",
+  त: "t", थ: "th", द: "d", ध: "dh", न: "n", प: "p", फ: "ph", ब: "b", भ: "bh", म: "m", य: "y", र: "r", ल: "l", ळ: "ḷ", व: "v",
+  श: "ś", ष: "ṣ", स: "s", ह: "h",
+};
+const D_OTHER: Record<string, string> = { "ं": "ṃ", "ः": "ḥ", "ँ": "m̐", "ऽ": "'", ॐ: "oṃ", "ॅ": "", "़": "" };
+/** Standard IAST transliteration; daṇḍas are kept as daṇḍas (as upanishads.org.in does), digits become ASCII. */
+export function devaToIast(s: string): string {
+  const src = s.normalize("NFC").replace(/[॑-॔᳐-᳿꣠-ꣿ‌‍]/g, "");
+  let out = "";
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    const cons = D_CONS[c];
+    if (cons !== undefined) {
+      out += cons;
+      let j = i + 1;
+      if (src[j] === "़") j++;
+      const next = src[j];
+      if (next === "्") i = j;
+      else if (D_SIGN[next] !== undefined) {
+        out += D_SIGN[next];
+        i = j;
+      } else {
+        out += "a";
+        i = j - 1;
+      }
+      continue;
+    }
+    if (D_VOWEL[c] !== undefined) out += D_VOWEL[c];
+    else if (D_OTHER[c] !== undefined) out += D_OTHER[c];
+    else if (/[०-९]/.test(c)) out += String(DEVA_DIGITS.indexOf(c));
+    else out += c;
+  }
+  return out;
+}

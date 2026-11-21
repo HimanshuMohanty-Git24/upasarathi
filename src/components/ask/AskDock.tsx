@@ -11,7 +11,8 @@ export function AskDock() {
   const path = usePathname();
   const router = useRouter();
   const { open, messages, busy } = useAsk();
-  const inExplore = path.startsWith("/explore");
+  const inExplore = path.startsWith("/map");
+  useEffect(() => askStore.hydrate(), []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -30,7 +31,7 @@ export function AskDock() {
     askStore.showInGraph(m);
     askStore.close();
     explore.setDock("ask");
-    router.push("/explore");
+    router.push("/map");
   };
   return (
     <>

@@ -17,7 +17,9 @@
     "runs:record": "node scripts/record-runs.mjs",
     "runs:verify": "node scripts/verify-runs.mjs",
     "harness:build": "node scripts/build-harness.mjs",
-    "harness": "node harness/cli.ts"
+    "harness": "node harness/cli.ts",
+    "runs:rederive": "node scripts/rederive-checks.mjs",
+    "runs:table": "node scripts/bench-table.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.12.0",

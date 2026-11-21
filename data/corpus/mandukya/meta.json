@@ -10,7 +10,7 @@
   ],
   "scope": "complete",
   "expect": 12,
-  "order": 5,
+  "order": 6,
   "tagline": "OM and the four states of the self: waking, dream, deep sleep, and the Fourth.",
   "ingest": {
     "org": "mandukya",
@@ -26,7 +26,9 @@
     "bhashya": {
       "book": "mandukya-upanishad-karika-bhashya",
       "translator": "Swami Nikhilananda",
-      "edition": "1949"
-    }
+      "edition": "1949",
+      "crawl": true
+    },
+    "shanti": "Bhadraṃ karṇebhiḥ"
   }
 }

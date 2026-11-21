@@ -112,6 +112,8 @@ export interface LlmResult {
   model: string;
   ms: number;
   finish: string | null;
+  /** Tokens billed for this call, when the provider reports them. */
+  usage?: { in: number; out: number };
 }
 export type LlmErrorCode = "no-key" | "auth" | "model" | "rate-minute" | "rate-daily" | "empty" | "refusal" | "upstream" | "network" | "bad-request";
 
@@ -144,6 +146,7 @@ export function chatBody(req: LlmRequest): Record<string, unknown> {
     messages: req.messages,
     ...(oaiR ? { max_completion_tokens: max } : { max_tokens: max, temperature: req.temperature ?? 0.7 }),
     stream: Boolean(req.stream),
+    ...(req.stream && (req.provider === "openai" || req.provider === "groq" || req.provider === "openrouter") ? { stream_options: { include_usage: true } } : {}),
     ...(req.json && p.json ? { response_format: { type: "json_object" } } : {}),
     ...(req.reasoning && ((req.provider === "groq" && /gpt-oss/.test(req.model)) || oaiR) ? { reasoning_effort: req.reasoning } : {}),
   };
@@ -176,12 +179,15 @@ export function classifyHttp(status: number, body: string, retryAfter: string | 
 }
 
 export function readCompletion(json: unknown, model: string, ms: number): LlmResult {
-  const j = json as { model?: string; choices?: { message?: { content?: string | null }; finish_reason?: string }[] };
-  const text = (j.choices?.[0]?.message?.content ?? "").trim();
+  const j = json as { model?: string; choices?: { message?: { content?: string | null }; finish_reason?: string }[]; usage?: { prompt_tokens?: number; completion_tokens?: number } };
+  // Some open models print their reasoning inline as <think>…</think>; it is never part of the answer.
+  const text = stripThinking(j.choices?.[0]?.message?.content ?? "");
   const finish = j.choices?.[0]?.finish_reason ?? null;
   if (!text) throw emptyError(finish);
-  return { text, model: j.model || model, ms, finish };
+  return { text, model: j.model || model, ms, finish, ...(j.usage ? { usage: { in: j.usage.prompt_tokens ?? 0, out: j.usage.completion_tokens ?? 0 } } : {}) };
 }
+
+export const stripThinking = (s: string) => s.replace(/<think>[\s\S]*?(<\/think>|$)/gi, "").trim();
 
 export function emptyError(finish: string | null): LlmError {
   return new LlmError(
@@ -191,7 +197,7 @@ export function emptyError(finish: string | null): LlmError {
 }
 
 /** Text deltas from an OpenAI-compatible SSE stream. */
-export async function* sseDeltas(body: ReadableStream<Uint8Array>): AsyncGenerator<{ delta: string; finish: string | null }> {
+export async function* sseDeltas(body: ReadableStream<Uint8Array>): AsyncGenerator<{ delta: string; finish: string | null; usage?: { in: number; out: number } }> {
   const reader = body.getReader();
   const dec = new TextDecoder();
   let buf = "";
@@ -207,10 +213,16 @@ export async function* sseDeltas(body: ReadableStream<Uint8Array>): AsyncGenerat
       const data = line.slice(5).trim();
       if (data === "[DONE]") return;
       try {
-        const j = JSON.parse(data) as { choices?: { delta?: { content?: string }; finish_reason?: string | null }[]; error?: { message?: string } };
+        const j = JSON.parse(data) as {
+          choices?: { delta?: { content?: string }; finish_reason?: string | null }[];
+          error?: { message?: string };
+          usage?: { prompt_tokens?: number; completion_tokens?: number };
+          x_groq?: { usage?: { prompt_tokens?: number; completion_tokens?: number } };
+        };
         if (j.error) throw new LlmError("upstream", j.error.message || "stream error");
         const c = j.choices?.[0];
-        if (c?.delta?.content || c?.finish_reason) yield { delta: c.delta?.content || "", finish: c.finish_reason ?? null };
+        const u = j.usage || j.x_groq?.usage;
+        if (c?.delta?.content || c?.finish_reason || u) yield { delta: c?.delta?.content || "", finish: c?.finish_reason ?? null, ...(u ? { usage: { in: u.prompt_tokens ?? 0, out: u.completion_tokens ?? 0 } } : {}) };
       } catch (e) {
         if (e instanceof LlmError) throw e;
       }
