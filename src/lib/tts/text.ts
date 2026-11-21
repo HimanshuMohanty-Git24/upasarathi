@@ -1,4 +1,4 @@
-// Pure text preparation for the two speech engines (no DOM; shared by the browser, the tests and the offline script).
+// Pure text preparation for the speech engines (no DOM; shared by the browser, the tests and the offline script).
 
 // ── Sanskrit, for Vāgdhenu ────────────────────────────────────────────────────────────────────────
 const CONSONANT = /[क-हक़-य़]/;
@@ -119,47 +119,186 @@ const IAST_PLAIN: [RegExp, string][] = [
 ];
 
 /**
- * Text a voice can read: Devanagari dropped (it is printed above the translation), footnote marks removed, and IAST
- * spelt the way an English reader would say it (Śaṅkara → Shankara, Upaniṣad → Upanishad, Ātman → Atman).
+ * Text a voice can read: Devanagari dropped (it is printed above the translation), footnote marks, citations such as
+ * "(Bṛhadā. Upa. III. viii. 11.)" and passage numbers such as "(7)" removed, and IAST spelt the way an English reader
+ * would say it (Śaṅkara → Shankara, Upaniṣad → Upanishad, Ātman → Atman).
  */
 export function speakable(raw: string): string {
   let s = raw
     .replace(/[ऀ-ॿ]+(?:[\sऀ-ॿ]*[ऀ-ॿ])?/g, " ")
-    .replace(/\[\d+\]|\{\d+\}/g, "")
+    .replace(/\[\d+\]|\{\d+\}|\[p\.?\s*\d+\]/g, "")
     .replace(/\(\s*\)/g, "")
     .replace(/^\s*Com\.\s*[—-]\s*/gm, "")
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'");
   for (const [re, to] of IAST_PLAIN) s = s.replace(re, to);
   s = s.normalize("NFD").replace(/[̀-ͯ]/g, "").normalize("NFC");
+  s = s
+    // A citation: abbreviated titles, then book / chapter / verse numbers (Roman or Arabic).
+    .replace(/\s*\((?:see\s+|cf\.\s+)?(?:[A-Z][A-Za-z]{0,9}\.?\s*){1,4}(?:[IVXL]+\.?\s*)?(?:[ivxl]+\.?\s*)?\d+(?:\s*[.,–-]\s*\d+)*\.?\s*\)/g, "")
+    // A passage number in brackets at the end of a paragraph, with the dash that leads into it.
+    .replace(/\s*[—-]?\s*\(\d+(?:\s*[–-]\s*\d+)?\)\s*(?=$|\n)/g, "");
   return s
     .split(/\n+/)
-    .map((l) => l.replace(/[ \t]+/g, " ").trim())
+    .map((l) => l.replace(/[ \t]+/g, " ").replace(/\s+([.,;:!?])/g, "$1").trim())
     .filter((l) => /[A-Za-z0-9]/.test(l))
     .join("\n");
 }
 
-/** Sentences for the browser voice (which drops long utterances): split at full stops and line breaks, then at
- *  semicolons, colons and commas while a piece is still longer than `max` characters. */
-export function splitSentences(text: string, max = 240): string[] {
+// Full stops that do not end a sentence: titles, scholarly abbreviations, and the short names of texts in citations.
+const ABBREV = new Set(["Mr", "Mrs", "Dr", "St", "Sri", "Shri", "Prof", "Skt", "Com", "Comm", "Ved", "Vol", "Up", "Upa", "Upan", "Br", "Bri", "Brih", "Brihad", "Brihada", "Ch", "Chh", "Chand", "Chhand", "Ka", "Kath", "Ke", "Mu", "Mund", "Ma", "Mand", "Tai", "Tait", "Taitt", "Ai", "Ait", "Sv", "Svet", "Shvet", "Pr", "Pras", "Prash", "Bh", "Gi", "Su", "Sut", "Mai", "Kaush", "Bk", "Pt", "Sec", "Ibid"]);
+const ABBREV_LOWER = new Set(["e.g", "i.e", "cf", "viz", "vs", "vol", "p", "pp", "ch", "ed", "eds", "trans", "tr", "op", "cit", "ibid", "lit", "sec", "v", "vv", "ff", "fn", "fig", "chap", "comm", "approx", "sc", "esp"]);
+function abbreviation(token: string): boolean {
+  const w = token.replace(/^[("'“‘[]+/, "");
+  if (!w) return false;
+  if (/^\p{L}$/u.test(w)) return w !== "I"; // an initial (S. Radhakrishnan), but not the pronoun
+  if (/^[ivxlc]+$/.test(w) || /^[IVXLC]{2,}$/.test(w)) return true; // a book or chapter number in a citation
+  return ABBREV.has(w) || ABBREV_LOWER.has(w);
+}
+
+/** Sentences of one paragraph, split at ., ! and ? before a capital or a digit; never after an abbreviation or an
+ *  initial, and never inside brackets (a citation). Works on any script's capitals (Ātman), not only ASCII. */
+export function sentencesOf(para: string): string[] {
   const out: string[] = [];
-  for (const para of text.split(/\n+/)) {
-    for (const s of para.split(/(?<=[.!?…])\s+(?=["'(]?[A-Z0-9])/)) {
-      const t = s.trim();
-      if (!t) continue;
-      if (t.length <= max) {
-        out.push(t);
-        continue;
+  const re = /[.!?…]+["'”’)\]]*(?:\s+|—\s*)(?=["'“‘(\[]?[\p{Lu}\d])/gu;
+  let start = 0;
+  let depth = 0;
+  let scanned = 0;
+  for (const m of para.matchAll(re)) {
+    const i = m.index;
+    for (; scanned < i; scanned++) {
+      const c = para[scanned];
+      if (c === "(" || c === "[") depth++;
+      else if ((c === ")" || c === "]") && depth > 0) depth--;
+    }
+    if (depth > 0) continue;
+    if (m[0][0] === "." && abbreviation(/(\S+)$/.exec(para.slice(Math.max(start, i - 40), i))?.[1] ?? "")) continue;
+    const cut = i + m[0].length;
+    const s = para.slice(start, cut).trim();
+    if (s) out.push(s);
+    start = cut;
+  }
+  const rest = para.slice(start).trim();
+  if (rest) out.push(rest);
+  return out;
+}
+
+/** A sentence's clauses: after a comma, semicolon or colon, and after a dash. */
+const clausesOf = (s: string) => s.split(/(?<=[,;:])\s+|(?<=—)\s*(?=\S)/).filter(Boolean);
+
+// Where a phrase may start, for cutting a long clause between words: conjunctions and relatives first, then prepositions.
+const STRONG = new Set(["and", "but", "or", "nor", "because", "since", "as", "when", "while", "where", "which", "who", "whom", "whose", "that", "though", "although", "if", "unless", "until", "so", "therefore", "hence", "thus", "whereas", "lest"]);
+const WEAK = new Set(["for", "in", "of", "to", "with", "by", "from", "through", "into", "upon", "on", "like", "than", "even", "being", "having", "without", "within", "about", "after", "before"]);
+/** Cut a run of words into a head of at most `limit` characters and the rest, preferably before a conjunction. */
+function cutWords(s: string, limit: number): [string, string] {
+  const words = s.split(" ");
+  let best = { strong: 0, weak: 0, any: 0 };
+  let len = words[0].length;
+  for (let k = 1; k < words.length && len <= limit; k++) {
+    const w = words[k].toLowerCase().replace(/^[("'“‘]+/, "");
+    const enough = len >= limit * 0.4;
+    best.any = k;
+    if (enough && STRONG.has(w)) best.strong = k;
+    else if (enough && WEAK.has(w)) best.weak = k;
+    len += 1 + words[k].length;
+  }
+  const k = best.strong || best.weak || best.any || 1;
+  return [words.slice(0, k).join(" "), words.slice(k).join(" ")];
+}
+
+/**
+ * The pieces narration is synthesized in, one at a time, so playback can start on the first while the rest is made.
+ * The first piece is short (at most `first` characters, ending at a clause or phrase boundary) so the voice starts at
+ * once; each later piece is at most `ramp` times the text already made, up to `max`, so the next is always ready
+ * before the current one ends (synthesis runs at about a third of real time on one CPU thread). Pieces end at a
+ * sentence where they can, merge short sentences, and never break a word.
+ */
+export function narrationChunks(text: string, { max = 180, first = 48, ramp = 2 }: { max?: number; first?: number; ramp?: number } = {}): string[] {
+  const atoms: { t: string; end: boolean }[] = [];
+  for (const para of text.split(/\n+/))
+    for (const s of sentencesOf(para)) {
+      const cs = clausesOf(s);
+      cs.forEach((c, k) => atoms.push({ t: c, end: k === cs.length - 1 }));
+    }
+  const chunks: string[] = [];
+  let made = 0;
+  let cur = "";
+  /** The clauses in `cur`, as [index in atoms, text]. */
+  let held: [number, string][] = [];
+  const limit = () => (chunks.length === 0 ? first : Math.min(max, Math.max(first, Math.floor(ramp * made))));
+  const flush = () => {
+    if (!cur) return;
+    chunks.push(cur);
+    made += cur.length;
+    cur = "";
+    held = [];
+  };
+  for (let n = 0; n < atoms.length; n++) {
+    const a = atoms[n];
+    const lim = limit();
+    const joined = cur ? `${cur} ${a.t}` : a.t;
+    if (joined.length <= lim) {
+      cur = joined;
+      held.push([n, a.t]);
+      if (a.end && cur.length >= lim * 0.5) flush();
+    } else if (cur) {
+      // Do not leave a short clause ("hence,") dangling at the end of a piece: it starts the next one instead.
+      const last = held.at(-1)!;
+      if (held.length > 1 && !atoms[last[0]].end && last[1].length < 16) {
+        held.pop();
+        cur = held.map(([, t]) => t).join(" ");
+        n = last[0];
       }
-      let cur = "";
-      for (const part of t.split(/(?<=[;:,—])\s+/)) {
-        if (cur && (cur + " " + part).length > max) {
-          out.push(cur);
-          cur = part;
-        } else cur = cur ? `${cur} ${part}` : part;
-      }
-      if (cur) out.push(cur);
+      flush();
+      n--; // try this clause again, against the next piece's limit
+    } else {
+      const [head, rest] = cutWords(a.t, lim);
+      cur = head;
+      flush();
+      if (rest) atoms.splice(n + 1, 0, { t: rest, end: a.end });
     }
   }
-  return out;
+  flush();
+  return chunks.filter((c) => /[A-Za-z0-9]/.test(c));
+}
+
+/** What a speechSynthesis voice looks like, for ranking (SpeechSynthesisVoice satisfies it). */
+export interface VoiceLike {
+  name: string;
+  lang: string;
+  voiceURI: string;
+  localService: boolean;
+  default?: boolean;
+}
+// macOS novelty voices and old formant synthesizers: never chosen while anything else is available.
+const NOVELTY = /\b(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Organ|Pipe Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Junior|Ralph|Kathy|Princess)\b/i;
+/** How natural an English voice is likely to sound: neural ("Natural", "Online", "Enhanced", "Premium") voices first,
+ *  Google UK English and Rishi (Indian English) next, the old desktop voices (Microsoft David, Zira, eSpeak) last. */
+export function voiceScore(v: VoiceLike): number {
+  const n = v.name;
+  let s = 0;
+  if (/\bNatural\b/i.test(n)) s += 100;
+  if (/\bOnline\b/i.test(n)) s += 60;
+  if (/\b(Enhanced|Premium|Neural)\b/i.test(n)) s += 65;
+  if (/Google UK English/i.test(n)) s += 70;
+  else if (/Google US English/i.test(n)) s += 55;
+  else if (/^Google\b/i.test(n)) s += 40;
+  if (/\bRishi\b/i.test(n)) s += 60;
+  if (/\bSiri\b/i.test(n)) s += 45;
+  if (/^Microsoft\b/i.test(n) && !/\b(Online|Natural)\b/i.test(n)) s -= 40;
+  if (/\bDesktop\b/i.test(n)) s -= 40;
+  if (/e-?speak|festival|\bpico\b/i.test(n)) s -= 80;
+  if (NOVELTY.test(n)) s -= 100;
+  const lang = v.lang.replace("_", "-").toLowerCase();
+  s += lang.startsWith("en-gb") ? 12 : lang.startsWith("en-in") ? 10 : /^en-(au|ie|nz)/.test(lang) ? 6 : lang.startsWith("en-us") ? 5 : 0;
+  if (v.default) s += 2;
+  return s;
+}
+/** English voices, best first (ties keep the browser's order). */
+export function rankVoices<T extends VoiceLike>(voices: readonly T[]): T[] {
+  return voices
+    .map((v, i) => ({ v, i, s: voiceScore(v) }))
+    .filter(({ v }) => /^en([-_]|$)/i.test(v.lang))
+    .sort((a, b) => b.s - a.s || a.i - b.i)
+    .map(({ v }) => v);
 }

@@ -1,4 +1,4 @@
-/* Local speech (Kokoro narration, Vāgdhenu AI chant). Uses the site tokens, so light and dark follow the theme. */
+/* Local speech (Piper narration, Vāgdhenu AI chant). Uses the site tokens, so light and dark follow the theme. */
 
 /* The AI chant badge: always visible wherever synthesized Sanskrit audio plays. */
 .tts-badge { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 1.5; color: var(--text-2); background: var(--gold-soft); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); white-space: normal; }
@@ -31,3 +31,7 @@
 @keyframes tts-slide { from { left: -30%; } to { left: 100%; } }
 @media (prefers-reduced-motion: reduce) { .tts-card, .tts-progress > i { animation: none !important; transition: none; } }
 @media (max-width: 640px) { .tts-bar .tts-speed { display: none; } }
+/* Narration dock: title row [play · title · stop], controls below; on wide screens Piper (no voice picker) fits one line. */
+.tts-bar .tts-voice { max-width: 240px; min-width: 0; text-overflow: ellipsis; }
+@media (min-width: 641px) { .tts-bar.tts-one-line .tts-row { order: 2; width: auto; } .tts-bar.tts-one-line .tts-stop { order: 3; } }
+@media (max-width: 640px) { .tts-bar .tts-engine { display: none; } .tts-bar .tts-row { flex-wrap: nowrap; } .tts-bar .tts-voice { flex: 1 1 0; max-width: none; } }

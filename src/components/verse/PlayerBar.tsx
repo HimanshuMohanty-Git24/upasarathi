@@ -6,7 +6,9 @@
 // Position is the nāda string (components/reader/NadaString). Sources Web Audio may read (same-origin, blob: AI
 // chants) play in their own element, so an element ever wired to an analyser never plays a cross-origin recording.
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { canTap, player, untap, usePlayer } from "@/lib/client/player";
+import { narrator } from "@/lib/tts/narrator";
 import { IconClose, IconLoop, IconNext, IconPause, IconPlay, IconPrev } from "@/components/ui/Icons";
 import { TtsBar, useTtsActive } from "@/components/tts/TtsBar";
 import { AiBadge } from "@/components/tts/TtsBits";
@@ -21,6 +23,9 @@ export function PlayerBar() {
   const track = st.queue[st.index] ?? null;
   const tts = useTtsActive();
   const kind = track && canTap(track.src) ? "tap" : "plain";
+  // Narration belongs to the page it was started on: going to another passage stops it (and drops what is queued).
+  const path = usePathname();
+  useEffect(() => narrator.leave(path), [path]);
 
   // Load the current track (a segment of a whole recording seeks to its start).
   useEffect(() => {

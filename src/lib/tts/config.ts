@@ -1,9 +1,10 @@
 // Local text-to-speech, entirely in the browser: no key, no server. Two engines, each in its own module worker under
-// public/tts/ so Next never bundles the runtimes; every script is loaded from a pinned CDN URL and every model from
-// Hugging Face, then kept in the browser's Cache API.
+// public/tts/, so Next never bundles their runtimes; every runtime and model URL is pinned, and each is downloaded once.
 //
-//   English narration of translations and Śaṅkara's commentary: Kokoro-82M (kokoro-js, q8 ONNX on WASM), with the
-//   browser's own speechSynthesis as the zero-download "Quick Read".
+//   English narration of translations and Śaṅkara's commentary: Piper (Rhasspy; voice en_GB-alan-medium) through
+//   @mintplex-labs/piper-tts-web on ONNX Runtime Web, streamed sentence by sentence; the worker is bundled from
+//   workers/piper-worker.js by scripts/build-tts-worker.mjs. The browser's own speechSynthesis is the zero-download
+//   "Browser voice".
 //   Sanskrit recitation where no human recording exists: Vāgdhenu (IISc Bengaluru, Prof. Prathosh A P), the
 //   flow-matching śloka-to-chant model, ported to ONNX Runtime Web by Hemanth HM. It chants in classical meter and
 //   has no Vedic svaras (udātta, anudātta, svarita), so it is never presented as a Vedic recitation.
@@ -11,26 +12,33 @@
 /** The exact badge on every synthesized chant. */
 export const AI_CHANT_BADGE = "AI Chant · Vāgdhenu (classical meter, no Vedic svaras)";
 
-export const KOKORO = {
-  worker: "/tts/kokoro-worker.js",
-  lib: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js",
-  model: "onnx-community/Kokoro-82M-v1.0-ONNX",
-  dtype: "q8",
-  /** onnx/model_quantized.onnx, the file kokoro-js loads for dtype "q8" (bytes, from the Hub listing). */
-  modelBytes: 92_361_116,
-  /** The one file whose presence in the browser cache means the voice is downloaded. */
-  modelUrl: "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model_quantized.onnx",
-  cacheName: "transformers-cache",
-  sampleRate: 24_000,
+/** ONNX Runtime Web: the same version as the npm dependency the narration worker is bundled with (a test checks). */
+const ORT_VERSION = "1.23.2";
+export const PIPER = {
+  worker: "/tts/piper-worker.js",
+  voice: "en_GB-alan-medium",
+  voiceLabel: "Alan · British English",
+  /** Where @mintplex-labs/piper-tts-web fetches the voice (Rhasspy's Piper voices, mirrored by Diffusion Studio). */
+  model: "https://huggingface.co/diffusionstudio/piper-voices/resolve/main/en/en_GB/alan/medium/en_GB-alan-medium.onnx",
+  ort: `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/`,
+  ortVersion: ORT_VERSION,
+  /** espeak-ng compiled to WebAssembly: turns English text into the phonemes Piper reads. */
+  phonemizer: "https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize",
+  sampleRate: 22_050,
+  /** Origin private file system (OPFS): the package keeps the voice in piper/, the worker keeps the runtimes here. */
+  opfs: { voiceDir: "piper", voiceFile: "en_GB-alan-medium.onnx", runtimeDir: "upasarathi-tts" },
+  /** Bytes of each download (the voice from the Hub listing; the runtimes measured). Also an integrity check: a file
+   *  of any other size is fetched again. */
+  bytes: { model: 63_201_294, ort: 11_905_541, phonemizerData: 18_077_249, phonemizerWasm: 635_212 },
 } as const;
-
-export const KOKORO_VOICES = [
-  { id: "bm_george", label: "George", note: "British, male" },
-  { id: "af_heart", label: "Heart", note: "American, female" },
-  { id: "bf_emma", label: "Emma", note: "British, female" },
-  { id: "am_michael", label: "Michael", note: "American, male" },
+/** Everything Piper needs, downloaded once: about 94 MB. */
+export const PIPER_BYTES = Object.values(PIPER.bytes).reduce((a, b) => a + b, 0);
+/** The runtimes the worker fetches itself and keeps in OPFS (file names carry their versions). */
+export const PIPER_RUNTIME = [
+  { key: "ort", url: `${PIPER.ort}ort-wasm-simd-threaded.wasm`, file: `ort-wasm-simd-threaded-${ORT_VERSION}.wasm`, bytes: PIPER.bytes.ort },
+  { key: "phonemizerWasm", url: `${PIPER.phonemizer}.wasm`, file: "piper_phonemize-1.0.0.wasm", bytes: PIPER.bytes.phonemizerWasm },
+  { key: "phonemizerData", url: `${PIPER.phonemizer}.data`, file: "piper_phonemize-1.0.0.data", bytes: PIPER.bytes.phonemizerData },
 ] as const;
-export type KokoroVoice = (typeof KOKORO_VOICES)[number]["id"];
 
 export const SPEEDS = [0.8, 1, 1.25, 1.5] as const;
 export type Speed = (typeof SPEEDS)[number];

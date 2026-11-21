@@ -1,4 +1,4 @@
-// Plays audio as it is generated: each chunk (a sentence of narration, a hemistich of chant) is scheduled right after
+// Plays the AI chant as it is generated: each chunk (a hemistich) is scheduled right after
 // the previous one on a Web Audio clock. In-browser synthesis can be slower than real time (single-threaded WASM, an
 // integrated GPU), so playback is held until enough is buffered to run without gaps (see `shouldRelease`), or until
 // the listener asks to hear what is ready. Create the player inside the click handler: browsers only let a user
