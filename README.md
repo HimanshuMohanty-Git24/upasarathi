@@ -15,7 +15,7 @@ and an open alignment harness that tests whether an AI model picks the pleasant 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![three.js](https://img.shields.io/badge/three.js-0.187-000?style=flat-square&logo=three.js)](https://threejs.org)
 [![Tests](https://img.shields.io/badge/tests-95%20passing-93bba3?style=flat-square)](#testing)
-[![License: MIT](https://img.shields.io/badge/license-MIT-93bba3?style=flat-square)](#license)
+[![License: MIT](https://img.shields.io/badge/license-MIT-93bba3?style=flat-square)](LICENSE)
 
 [**Live site**](https://upasarathi.vercel.app) · [Quick start](#quick-start) · [The harness](#the-alignment-harness) · [Benchmark](#benchmark) · [Data & sources](#data--sources) · [Contributing](#contributing)
 
@@ -83,7 +83,7 @@ and an open alignment harness that tests whether an AI model picks the pleasant 
 ### Listening
 
 - **Human recitation** for 460 passages, with a *nāda* string that resonates with the chant.
-- **AI chant** for passages without a recording: Vāgdhenu by Prof. Prathosh A P (IISc Bengaluru), running **100 % in the browser** on WebGPU and always labelled as AI.
+- **AI chant** for passages without a recording: [Vāgdhenu](https://prathosh.in/vagdhenu/) by Prof. Prathosh A P (IISc Bengaluru), running **100 % in the browser** on WebGPU and always labelled as AI.
 - **Listen to the translation or commentary**: Piper neural TTS streamed sentence by sentence on the device. **Zero servers, zero API cost.**
 
 ### Testing an AI
@@ -444,7 +444,7 @@ Found a mis-transliteration, a wrong reference or a fabricated-looking quote? Pl
 
 - **Texts and recitations:** [upanishads.org.in](https://upanishads.org.in/), Sanskrit Wikisource and [Wisdom Library](https://www.wisdomlib.org/), with deep gratitude to every translator listed above.
 - **Word analysis:** Oliver Hellwig's [Digital Corpus of Sanskrit](https://github.com/OliverHellwig/sanskrit), Dharmamitra and vidyut.
-- **Voices:** Vāgdhenu by Prof. Prathosh A P (IISc Bengaluru), ported to the browser by Hemanth HM; [Piper](https://github.com/rhasspy/piper) by Rhasspy.
+- **Voices:** [Vāgdhenu](https://prathosh.in/vagdhenu/) by Prof. Prathosh A P (IISc Bengaluru), ported to the browser by Hemanth HM; [Piper](https://github.com/rhasspy/piper) by Rhasspy.
 - **Libraries:** Next.js, React, three.js, react-force-graph, React Flow, ONNX Runtime Web.
 
 **Part of a series:** **GitaViśva** (the Bhagavad Gītā as a knowledge graph) · **VedAnvaya** (the four Vedas) · **UpaSārathi** (the Upanishads).
@@ -453,7 +453,7 @@ Found a mis-transliteration, a wrong reference or a fabricated-looking quote? Pl
 
 ## License
 
-Code is released under the **MIT License** (see `package.json`). Translations and commentaries remain the property of their translators and publishers and are shown with attribution for non-commercial study. The paintings in `public/images/` were AI-generated for this project.
+Code is released under the [**MIT License**](LICENSE). Translations and commentaries remain the property of their translators and publishers and are shown with attribution for non-commercial study. The paintings in `public/images/` were AI-generated for this project.
 
 <div align="center">
 <br/>
